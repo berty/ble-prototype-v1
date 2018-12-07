@@ -18,6 +18,7 @@
 @property (nonatomic, strong) CBPeripheral *peripheral;
 @property (strong) NSString *name;
 @property (nonatomic, assign) NSUInteger connected;
+@property (strong) NSDictionary <NSString *, id>*advData;
 
 -(instancetype)init:(NSString*)identifierString;
 

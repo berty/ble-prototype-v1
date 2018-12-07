@@ -22,6 +22,8 @@
 		9903A16321B9559B00D011A3 /* CountDownLatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A15A21B9559B00D011A3 /* CountDownLatch.m */; };
 		9903A16621B9612C00D011A3 /* Device.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A16521B9612C00D011A3 /* Device.m */; };
 		9903A16E21BAA9B000D011A3 /* DeviceController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A16D21BAA9B000D011A3 /* DeviceController.m */; };
+		9903A17121BAC36300D011A3 /* DeviceViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A17021BAC36300D011A3 /* DeviceViewController.m */; };
+		9903A17421BACAE200D011A3 /* DeviceTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A17321BACAE200D011A3 /* DeviceTableView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,6 +56,10 @@
 		9903A16521B9612C00D011A3 /* Device.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Device.m; sourceTree = "<group>"; };
 		9903A16C21BAA9B000D011A3 /* DeviceController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceController.h; sourceTree = "<group>"; };
 		9903A16D21BAA9B000D011A3 /* DeviceController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceController.m; sourceTree = "<group>"; };
+		9903A16F21BAC36300D011A3 /* DeviceViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceViewController.h; sourceTree = "<group>"; };
+		9903A17021BAC36300D011A3 /* DeviceViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceViewController.m; sourceTree = "<group>"; };
+		9903A17221BACAE100D011A3 /* DeviceTableView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceTableView.h; sourceTree = "<group>"; };
+		9903A17321BACAE200D011A3 /* DeviceTableView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceTableView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -115,6 +121,10 @@
 				9903A14721B9556500D011A3 /* macOS.entitlements */,
 				9903A16C21BAA9B000D011A3 /* DeviceController.h */,
 				9903A16D21BAA9B000D011A3 /* DeviceController.m */,
+				9903A16F21BAC36300D011A3 /* DeviceViewController.h */,
+				9903A17021BAC36300D011A3 /* DeviceViewController.m */,
+				9903A17221BACAE100D011A3 /* DeviceTableView.h */,
+				9903A17321BACAE200D011A3 /* DeviceTableView.m */,
 			);
 			path = macOS;
 			sourceTree = "<group>";
@@ -212,6 +222,8 @@
 				9903A15D21B9559B00D011A3 /* BertyPeripheralManagerDelegate.m in Sources */,
 				9903A15F21B9559B00D011A3 /* BertyDevice.m in Sources */,
 				9903A13E21B9556400D011A3 /* ViewController.m in Sources */,
+				9903A17421BACAE200D011A3 /* DeviceTableView.m in Sources */,
+				9903A17121BAC36300D011A3 /* DeviceViewController.m in Sources */,
 				9903A15C21B9559B00D011A3 /* BertyPeripheralDelegate.m in Sources */,
 				9903A15E21B9559B00D011A3 /* ble.m in Sources */,
 				9903A16021B9559B00D011A3 /* BertyCentralManagerDelegate.m in Sources */,

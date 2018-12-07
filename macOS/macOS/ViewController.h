@@ -12,7 +12,7 @@
 #import "BertyCentralManagerDelegate.h"
 #ifndef ViewController_h
 #define ViewController_h
-@interface ViewController : NSViewController <myDelegate, NSTextFieldDelegate>
+@interface ViewController : NSViewController <myDelegate, NSTextFieldDelegate, NSTableViewDelegate>
 
 
 @property (strong) IBOutlet DeviceController *DeviceAC;
@@ -27,7 +27,6 @@
 - (IBAction)search:(NSTextField *)sender;
 - (void) controlTextDidChange: (NSNotification *) aNotification;
 
-
 @end
-    
+
 #endif

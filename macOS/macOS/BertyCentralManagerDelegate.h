@@ -10,6 +10,7 @@
 #define BertyCentralManagerDelegate_h
 
 #import "BertyUtils.h"
+#import "DeviceController.h"
 #import "BertyPeripheralDelegate.h"
 #import "BertyDevice.h"
 #import "Device.h"
@@ -33,6 +34,7 @@ extern void setConnClosed(char *);
 @property (nonatomic, assign) dispatch_block_t adder;
 @property (nonatomic, strong) BertyPeripheralDelegate *peripheralDelegate;
 @property (nonatomic, assign) id<myDelegate> delegate;
+@property (nonatomic, strong) DeviceController *deviceAC;
 
 - (instancetype)initWithPeripheralDelegate:(BertyPeripheralDelegate *)delegate ;
 

@@ -117,15 +117,19 @@
  *
  */
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *, id> *)advertisementData RSSI:(NSNumber *)RSSI {
-    NSLog(@"centralManger: central didDiscoverPeripheral");
+//    NSLog(@"centralManger: central didDiscoverPeripheral");
     if (![devices objectForKey:[peripheral.identifier UUIDString]]) {
         Device *dev = [[Device alloc] init:[peripheral.identifier UUIDString]];
         [devices setObject:dev forKey:[peripheral.identifier UUIDString]];
         dev.peripheral = peripheral;
+        dev.advData = advertisementData;
         dispatch_async(dispatch_get_main_queue(), ^{
-        if ([self.delegate respondsToSelector:@selector(addDevice:)]) {
-            [self.delegate addDevice:dev];
-        }});
+            [self.deviceAC addObject:dev];
+//        if ([self.delegate respondsToSelector:@selector(addDevice:)]) {
+//            [self.delegate addDevice:dev];
+//        }
+            
+                       });
     }
 //    if (![BertyUtils inDevices:peripheral]) {
 //        NSLog(@"centralManger: central didDiscoverPeripheral: %@ RSSI %@ advertisementData: %@", [peripheral.identifier UUIDString], [RSSI stringValue], advertisementData);
@@ -148,8 +152,7 @@
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral {
     NSLog(@"centralManger: central didConnectPeripheral: %@ %@", [peripheral.identifier UUIDString], peripheral.delegate);
     dispatch_async(dispatch_get_main_queue(), ^{
-    Device *dev = [devices objectForKey:[peripheral.identifier UUIDString]];
-    
+        Device *dev = [self->devices objectForKey:[peripheral.identifier UUIDString]];
         dev.connected = 1;
         return;
     });

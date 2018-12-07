@@ -6,12 +6,15 @@
 //  Copyright © 2018 berty. All rights reserved.
 //
 
+#import "DeviceViewController.h"
 #import "ViewController.h"
 #import "Device.h"
 #import "ble.h"
 #import <CoreBluetooth/CoreBluetooth.h>
 
-@implementation ViewController 
+@implementation ViewController {
+    Device *selected;
+}
 
 
 - (void)viewDidLoad {
@@ -28,6 +31,7 @@
     
     init([ma UTF8String], [peerID UTF8String], self.DeviceAC);
     ((BertyCentralManagerDelegate *)getCentral().delegate).delegate = self;
+    ((BertyCentralManagerDelegate *)getCentral().delegate).deviceAC = self.DeviceAC;
     self.textview.delegate = self;
 }
 
@@ -38,6 +42,24 @@
     [self.DeviceAC removeObject:dev];
 }
 
+- (void)prepareForSegue:(NSStoryboardSegue *)segue sender:(id)sender {
+    NSLog(@" id : %@", segue.identifier);
+    if ([segue.identifier isEqualToString:@"DeviceView"]) {
+        NSLog(@" id2 : %@ , %lu", segue.identifier, self.tableView.selectedRow);
+        DeviceViewController *view = (DeviceViewController *)segue.destinationController;
+        view.device = self.DeviceAC.arrangedObjects[self.tableView.selectedRow];
+        
+    }
+}
+
+- (BOOL)shouldPerformSegueWithIdentifier:(NSStoryboardSegueIdentifier)identifier sender:(id)sender {
+    if ([identifier isEqualToString:@"DeviceView"]) {
+        if (self.tableView.selectedRow > [(NSArray*)[self.DeviceAC arrangedObjects] count]) {
+            return NO;
+        }
+    }
+    return YES;
+}
 
 - (void)callMeBaby {
     NSLog(@"Test");

@@ -17,6 +17,7 @@
     self.connected = 0;
     self.peripheral = nil;
     self.name = @"";
+    self.advData = @{}; 
     
     return self;
 }
