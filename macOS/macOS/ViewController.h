@@ -7,9 +7,19 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import "ble.h"
+#import "BertyCentralManagerDelegate.h"
+#ifndef ViewController_h
+#define ViewController_h
+@interface ViewController : NSViewController <myDelegate>
 
-@interface ViewController : NSViewController
-
+@property (weak) IBOutlet NSTableView *tableView;
+@property (strong) IBOutlet NSArrayController *DeviceAC;
+- (IBAction)service:(id)sender;
+- (IBAction)adv:(id)sender;
+- (IBAction)scan:(id)sender;
+- (IBAction)connect:(id)sender;
 
 @end
-
+    
+#endif

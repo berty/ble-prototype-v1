@@ -7,21 +7,77 @@
 //
 
 #import "ViewController.h"
+#import "Device.h"
+#import "ble.h"
+#import <CoreBluetooth/CoreBluetooth.h>
 
-@implementation ViewController
+@implementation ViewController 
+
+@synthesize DeviceAC;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-
-    // Do any additional setup after loading the view.
+    
+    Device *firs = [[Device alloc] init:@"first"];
+    Device *firs2 = [[Device alloc] init:@"firs2t"];
+    firs.connected = 3;
+    firs2.connected = 3;
+    [self.DeviceAC addObject:firs];
+    [self.DeviceAC addObject:firs2];
+    NSString *ma = @"d5406e06-ad83-4622-a7af-38dbe8c4fabe";
+    NSString *peerID = @"QmNXdnmutcuwAG4BcvgrEwc3znArQc9JTq6ALFote1rBoU";
+    
+    init([ma UTF8String], [peerID UTF8String], self.DeviceAC);
+    ((BertyCentralManagerDelegate *)getCentral().delegate).delegate = self;
 }
 
+- (void)addDevice:(Device *) dev {
+    [self.DeviceAC addObject:dev];
+}
+
+- (void)callMeBaby {
+    NSLog(@"Test");
+}
+
+- (IBAction)service:(id)sender {
+    NSLog(@"Service Button clicked %@", getPeripheral().delegate);
+    [getPeripheral() addService:[BertyUtils sharedUtils].bertyService];
+}
+
+- (IBAction)adv:(id)sender {
+    NSLog(@"adv Button clicked");
+    
+    [getPeripheral() startAdvertising:@{CBAdvertisementDataServiceUUIDsKey:@[[BertyUtils sharedUtils].serviceUUID]}];
+    NSArray<CBPeripheral *> *peripherals = [centralManager retrieveConnectedPeripheralsWithServices:@[[BertyUtils sharedUtils].serviceUUID]];
+    NSLog(@"%@", peripherals);
+}
+
+- (IBAction)scan:(id)sender {
+    [getCentral() scanForPeripheralsWithServices:nil options:@{CBCentralManagerScanOptionAllowDuplicatesKey:@YES}];
+
+//    [getCentral() scanForPeripheralsWithServices:@[[BertyUtils sharedUtils].serviceUUID] options:@{CBCentralManagerScanOptionAllowDuplicatesKey:@YES}];
+    NSLog(@"scan Button clicked");
+}
+
+- (IBAction)connect:(id)sender {
+    NSButton *button = (NSButton *)sender;
+    NSTableCellView  *cell = (NSTableCellView *)button.superview;
+    Device *device = (Device *)cell.objectValue;
+    device.connected = 2;
+    if (device.peripheral != nil) {
+        [getCentral() connectPeripheral:device.peripheral options:nil];
+    } else {
+        NSLog(@"Error unknown peripheral");
+    }
+    
+    NSLog(@"SENDER %ld %@ %@ %@", button.state, sender, cell, device.identifierString);
+    return;
+}
 
 - (void)setRepresentedObject:(id)representedObject {
     [super setRepresentedObject:representedObject];
 
     // Update the view, if already loaded.
 }
-
 
 @end

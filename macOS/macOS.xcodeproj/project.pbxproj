@@ -12,6 +12,15 @@
 		9903A14021B9556500D011A3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9903A13F21B9556500D011A3 /* Assets.xcassets */; };
 		9903A14321B9556500D011A3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9903A14121B9556500D011A3 /* Main.storyboard */; };
 		9903A14621B9556500D011A3 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A14521B9556500D011A3 /* main.m */; };
+		9903A15C21B9559B00D011A3 /* BertyPeripheralDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A14E21B9559900D011A3 /* BertyPeripheralDelegate.m */; };
+		9903A15D21B9559B00D011A3 /* BertyPeripheralManagerDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A15121B9559A00D011A3 /* BertyPeripheralManagerDelegate.m */; };
+		9903A15E21B9559B00D011A3 /* ble.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A15221B9559A00D011A3 /* ble.m */; };
+		9903A15F21B9559B00D011A3 /* BertyDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A15321B9559A00D011A3 /* BertyDevice.m */; };
+		9903A16021B9559B00D011A3 /* BertyCentralManagerDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A15621B9559A00D011A3 /* BertyCentralManagerDelegate.m */; };
+		9903A16121B9559B00D011A3 /* .clang-format in Resources */ = {isa = PBXBuildFile; fileRef = 9903A15721B9559A00D011A3 /* .clang-format */; };
+		9903A16221B9559B00D011A3 /* BertyUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A15821B9559A00D011A3 /* BertyUtils.m */; };
+		9903A16321B9559B00D011A3 /* CountDownLatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A15A21B9559B00D011A3 /* CountDownLatch.m */; };
+		9903A16621B9612C00D011A3 /* Device.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A16521B9612C00D011A3 /* Device.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +34,23 @@
 		9903A14421B9556500D011A3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9903A14521B9556500D011A3 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		9903A14721B9556500D011A3 /* macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macOS.entitlements; sourceTree = "<group>"; };
+		9903A14D21B9559900D011A3 /* BertyDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BertyDevice.h; sourceTree = "<group>"; };
+		9903A14E21B9559900D011A3 /* BertyPeripheralDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BertyPeripheralDelegate.m; sourceTree = "<group>"; };
+		9903A14F21B9559900D011A3 /* BertyPeripheralManagerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BertyPeripheralManagerDelegate.h; sourceTree = "<group>"; };
+		9903A15021B9559900D011A3 /* BertyCentralManagerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BertyCentralManagerDelegate.h; sourceTree = "<group>"; };
+		9903A15121B9559A00D011A3 /* BertyPeripheralManagerDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BertyPeripheralManagerDelegate.m; sourceTree = "<group>"; };
+		9903A15221B9559A00D011A3 /* ble.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ble.m; sourceTree = "<group>"; };
+		9903A15321B9559A00D011A3 /* BertyDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BertyDevice.m; sourceTree = "<group>"; };
+		9903A15421B9559A00D011A3 /* ble.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ble.h; sourceTree = "<group>"; };
+		9903A15521B9559A00D011A3 /* BertyPeripheralDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BertyPeripheralDelegate.h; sourceTree = "<group>"; };
+		9903A15621B9559A00D011A3 /* BertyCentralManagerDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BertyCentralManagerDelegate.m; sourceTree = "<group>"; };
+		9903A15721B9559A00D011A3 /* .clang-format */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ".clang-format"; sourceTree = "<group>"; };
+		9903A15821B9559A00D011A3 /* BertyUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BertyUtils.m; sourceTree = "<group>"; };
+		9903A15921B9559B00D011A3 /* BertyUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BertyUtils.h; sourceTree = "<group>"; };
+		9903A15A21B9559B00D011A3 /* CountDownLatch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CountDownLatch.m; sourceTree = "<group>"; };
+		9903A15B21B9559B00D011A3 /* CountDownLatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CountDownLatch.h; sourceTree = "<group>"; };
+		9903A16421B9612C00D011A3 /* Device.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Device.h; sourceTree = "<group>"; };
+		9903A16521B9612C00D011A3 /* Device.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Device.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -43,6 +69,7 @@
 			children = (
 				9903A13821B9556400D011A3 /* macOS */,
 				9903A13721B9556400D011A3 /* Products */,
+				9903A16721B975C400D011A3 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -58,6 +85,8 @@
 			isa = PBXGroup;
 			children = (
 				9903A13921B9556400D011A3 /* AppDelegate.h */,
+				9903A16421B9612C00D011A3 /* Device.h */,
+				9903A16521B9612C00D011A3 /* Device.m */,
 				9903A13A21B9556400D011A3 /* AppDelegate.m */,
 				9903A13C21B9556400D011A3 /* ViewController.h */,
 				9903A13D21B9556400D011A3 /* ViewController.m */,
@@ -65,9 +94,31 @@
 				9903A14121B9556500D011A3 /* Main.storyboard */,
 				9903A14421B9556500D011A3 /* Info.plist */,
 				9903A14521B9556500D011A3 /* main.m */,
+				9903A15721B9559A00D011A3 /* .clang-format */,
+				9903A15021B9559900D011A3 /* BertyCentralManagerDelegate.h */,
+				9903A15621B9559A00D011A3 /* BertyCentralManagerDelegate.m */,
+				9903A14D21B9559900D011A3 /* BertyDevice.h */,
+				9903A15321B9559A00D011A3 /* BertyDevice.m */,
+				9903A15521B9559A00D011A3 /* BertyPeripheralDelegate.h */,
+				9903A14E21B9559900D011A3 /* BertyPeripheralDelegate.m */,
+				9903A14F21B9559900D011A3 /* BertyPeripheralManagerDelegate.h */,
+				9903A15121B9559A00D011A3 /* BertyPeripheralManagerDelegate.m */,
+				9903A15921B9559B00D011A3 /* BertyUtils.h */,
+				9903A15821B9559A00D011A3 /* BertyUtils.m */,
+				9903A15421B9559A00D011A3 /* ble.h */,
+				9903A15221B9559A00D011A3 /* ble.m */,
+				9903A15B21B9559B00D011A3 /* CountDownLatch.h */,
+				9903A15A21B9559B00D011A3 /* CountDownLatch.m */,
 				9903A14721B9556500D011A3 /* macOS.entitlements */,
 			);
 			path = macOS;
+			sourceTree = "<group>";
+		};
+		9903A16721B975C400D011A3 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -101,6 +152,17 @@
 				TargetAttributes = {
 					9903A13521B9556400D011A3 = {
 						CreatedOnToolsVersion = 10.1;
+						SystemCapabilities = {
+							com.apple.GameCenter.Mac = {
+								enabled = 0;
+							};
+							com.apple.NetworkExtensions = {
+								enabled = 0;
+							};
+							com.apple.Sandbox = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -128,6 +190,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9903A14021B9556500D011A3 /* Assets.xcassets in Resources */,
+				9903A16121B9559B00D011A3 /* .clang-format in Resources */,
 				9903A14321B9556500D011A3 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -139,7 +202,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9903A16321B9559B00D011A3 /* CountDownLatch.m in Sources */,
+				9903A15D21B9559B00D011A3 /* BertyPeripheralManagerDelegate.m in Sources */,
+				9903A15F21B9559B00D011A3 /* BertyDevice.m in Sources */,
 				9903A13E21B9556400D011A3 /* ViewController.m in Sources */,
+				9903A15C21B9559B00D011A3 /* BertyPeripheralDelegate.m in Sources */,
+				9903A15E21B9559B00D011A3 /* ble.m in Sources */,
+				9903A16021B9559B00D011A3 /* BertyCentralManagerDelegate.m in Sources */,
+				9903A16621B9612C00D011A3 /* Device.m in Sources */,
+				9903A16221B9559B00D011A3 /* BertyUtils.m in Sources */,
 				9903A14621B9556500D011A3 /* main.m in Sources */,
 				9903A13B21B9556400D011A3 /* AppDelegate.m in Sources */,
 			);
