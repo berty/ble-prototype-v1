@@ -15,7 +15,8 @@
 @interface Device : NSObject
 
 @property (strong) NSString *identifierString;
-@property (strong) CBPeripheral *peripheral;
+@property (nonatomic, strong) CBPeripheral *peripheral;
+@property (strong) NSString *name;
 @property (nonatomic, assign) NSUInteger connected;
 
 -(instancetype)init:(NSString*)identifierString;

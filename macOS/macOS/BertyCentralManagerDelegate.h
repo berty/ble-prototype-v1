@@ -23,6 +23,7 @@ extern void setConnClosed(char *);
 @protocol myDelegate <NSObject>
 
 - (void)addDevice:(Device *) dev;
+- (void)removeDevice:(Device *) dev;
 
 @end
 

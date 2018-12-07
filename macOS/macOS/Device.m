@@ -16,10 +16,17 @@
     self.identifierString = identifierString;
     self.connected = 0;
     self.peripheral = nil;
+    self.name = @"";
     
     return self;
 }
 
+- (void)setPeripheral:(CBPeripheral *)peripheral {
+    dispatch_async(dispatch_get_main_queue(), ^{
+    self->_peripheral = peripheral;
+    self->_name = peripheral.name;
+    });
+}
 
 - (id)copyWithZone:(NSZone *)zone
 {

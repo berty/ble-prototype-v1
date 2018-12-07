@@ -23,5 +23,8 @@
     // Insert code here to tear down your application
 }
 
+- (void) controlTextDidChange: (NSNotification *) aNotification {
+    NSLog(@"ALALALA");
+}
 
 @end

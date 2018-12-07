@@ -13,7 +13,6 @@
 
 @implementation ViewController 
 
-@synthesize DeviceAC;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -29,11 +28,16 @@
     
     init([ma UTF8String], [peerID UTF8String], self.DeviceAC);
     ((BertyCentralManagerDelegate *)getCentral().delegate).delegate = self;
+    self.textview.delegate = self;
 }
 
 - (void)addDevice:(Device *) dev {
     [self.DeviceAC addObject:dev];
 }
+-(void)removeDevice:(Device *)dev {
+    [self.DeviceAC removeObject:dev];
+}
+
 
 - (void)callMeBaby {
     NSLog(@"Test");
@@ -79,5 +83,16 @@
 
     // Update the view, if already loaded.
 }
+
+- (IBAction)search:(NSTextField *)sender {
+    [self.DeviceAC setSearchString:sender.stringValue];
+    [self.DeviceAC rearrangeObjects];
+}
+
+- (void) controlTextDidChange: (NSNotification *) aNotification {
+    [self.DeviceAC setSearchString:self.textview.stringValue];
+    [self.DeviceAC rearrangeObjects];
+}
+
 
 @end

@@ -147,11 +147,12 @@
  */
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral {
     NSLog(@"centralManger: central didConnectPeripheral: %@ %@", [peripheral.identifier UUIDString], peripheral.delegate);
+    dispatch_async(dispatch_get_main_queue(), ^{
     Device *dev = [devices objectForKey:[peripheral.identifier UUIDString]];
     
         dev.connected = 1;
         return;
-    
+    });
 //    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
 //        BertyDevice *bDevice = [BertyUtils getDevice:peripheral];
 //        if (bDevice == nil) {
@@ -191,10 +192,17 @@
  */
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error {
     NSLog(@"centralManger: central didDisconnectPeripheral: %@ %@", [peripheral.identifier UUIDString], error);
-    Device *dev = [devices objectForKey:[peripheral.identifier UUIDString]];
+    dispatch_async(dispatch_get_main_queue(), ^{
+    Device *dev = [self->devices objectForKey:[peripheral.identifier UUIDString]];
     
-        dev.connected = 3;
-        return;
+    dev.connected = 3;
+    
+//    if ([self.delegate respondsToSelector:@selector(removeDevice:)]) {
+//        [self.delegate removeDevice:dev];
+//    }
+        
+                   });
+    return;
     
 //    BertyDevice *bDevice = [BertyUtils getDevice:peripheral];
 //    [BertyUtils removeDevice:bDevice];

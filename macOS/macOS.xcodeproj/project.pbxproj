@@ -21,6 +21,7 @@
 		9903A16221B9559B00D011A3 /* BertyUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A15821B9559A00D011A3 /* BertyUtils.m */; };
 		9903A16321B9559B00D011A3 /* CountDownLatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A15A21B9559B00D011A3 /* CountDownLatch.m */; };
 		9903A16621B9612C00D011A3 /* Device.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A16521B9612C00D011A3 /* Device.m */; };
+		9903A16E21BAA9B000D011A3 /* DeviceController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9903A16D21BAA9B000D011A3 /* DeviceController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -51,6 +52,8 @@
 		9903A15B21B9559B00D011A3 /* CountDownLatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CountDownLatch.h; sourceTree = "<group>"; };
 		9903A16421B9612C00D011A3 /* Device.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Device.h; sourceTree = "<group>"; };
 		9903A16521B9612C00D011A3 /* Device.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Device.m; sourceTree = "<group>"; };
+		9903A16C21BAA9B000D011A3 /* DeviceController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceController.h; sourceTree = "<group>"; };
+		9903A16D21BAA9B000D011A3 /* DeviceController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,6 +113,8 @@
 				9903A15B21B9559B00D011A3 /* CountDownLatch.h */,
 				9903A15A21B9559B00D011A3 /* CountDownLatch.m */,
 				9903A14721B9556500D011A3 /* macOS.entitlements */,
+				9903A16C21BAA9B000D011A3 /* DeviceController.h */,
+				9903A16D21BAA9B000D011A3 /* DeviceController.m */,
 			);
 			path = macOS;
 			sourceTree = "<group>";
@@ -203,6 +208,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9903A16321B9559B00D011A3 /* CountDownLatch.m in Sources */,
+				9903A16E21BAA9B000D011A3 /* DeviceController.m in Sources */,
 				9903A15D21B9559B00D011A3 /* BertyPeripheralManagerDelegate.m in Sources */,
 				9903A15F21B9559B00D011A3 /* BertyDevice.m in Sources */,
 				9903A13E21B9556400D011A3 /* ViewController.m in Sources */,
