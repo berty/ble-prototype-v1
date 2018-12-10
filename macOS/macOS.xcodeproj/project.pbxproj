@@ -171,6 +171,9 @@
 							com.apple.GameCenter.Mac = {
 								enabled = 0;
 							};
+							com.apple.HardenedRuntime = {
+								enabled = 0;
+							};
 							com.apple.NetworkExtensions = {
 								enabled = 0;
 							};

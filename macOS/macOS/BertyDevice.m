@@ -48,7 +48,7 @@
     dispatch_async(self.dispatch_queue, ^{
         dispatch_semaphore_wait(self.connSema, DISPATCH_TIME_FOREVER);
         [self waitService];
-        [self.peripheral discoverServices:@[[BertyUtils sharedUtils].serviceUUID]];
+        [self.peripheral discoverServices:nil];
     });
 }
 

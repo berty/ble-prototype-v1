@@ -173,7 +173,7 @@ NSString* const PEER_ID_UUID = @"0EF50D30-E208-4315-B323-D05E0A23E6B3";
 
     [self addObserver:self forKeyPath:@"CentralIsOn" options:0 context:nil];
     [self addObserver:self forKeyPath:@"PeripharalIsOn" options:0 context:nil];
-
+    NSLog(@"Berty Utils INIT");
     return self;
 }
 
@@ -181,14 +181,23 @@ NSString* const PEER_ID_UUID = @"0EF50D30-E208-4315-B323-D05E0A23E6B3";
                       ofObject:(id)object
                         change:(NSDictionary *)change
                        context:(void *)context {
-    NSLog(@"LALALLA");
+    
     @synchronized (self) {
         if (self.CentralIsOn == YES && self.PeripharalIsOn == YES && self.serviceAdded == NO) {
-            self.serviceAdded = YES;
+//            self.serviceAdded = YES;
             
 //        NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES], CBCentralManagerScanOptionAllowDuplicatesKey, nil];
         }
     }
+}
+
++ (nullable CBService *)getServices:(CBPeripheral *)peripheral {
+    for (CBService *svc in peripheral.services) {
+        if ([[svc.UUID UUIDString] isEqualToString:SERVICE_UUID]) {
+            return svc;
+        }
+    }
+    return nil;
 }
 
 + (NSString *)arrayServiceToSting:(NSArray *)array {

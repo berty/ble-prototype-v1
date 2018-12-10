@@ -37,6 +37,16 @@
     [centralManager cancelPeripheralConnection:peripheral];
 }
 
+
+- (void)observeValueForKeyPath:(NSString *)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary *)change
+                       context:(void *)context {
+    CBPeripheral *periph = (CBPeripheral *)object;
+    NSLog(@"self state = %ld", (long)periph.state );
+    
+}
+
 /*!
  *  @method peripheral:didDiscoverServices:
  *

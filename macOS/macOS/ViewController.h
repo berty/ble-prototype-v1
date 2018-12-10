@@ -15,9 +15,13 @@
 @interface ViewController : NSViewController <myDelegate, NSTextFieldDelegate, NSTableViewDelegate>
 
 
-@property (strong) IBOutlet DeviceController *DeviceAC;
+@property (nonatomic, strong) IBOutlet DeviceController *DeviceAC;
 @property (weak) IBOutlet NSTextField *textview;
 @property (strong) IBOutlet NSView *allView;
+
+@property (strong) CBPeripheralManager *peripheralManager;
+@property (strong) CBCentralManager *centralManager;
+@property (assign) BOOL loaded;
 
 @property (weak) IBOutlet NSTableView *tableView;
 - (IBAction)service:(id)sender;

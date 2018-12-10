@@ -17,6 +17,7 @@
     return [super init];
 }
 
+
 - (NSArray *)arrangeObjects:(NSArray *)objects {
     if (searchString == nil || [searchString isEqualToString:@""]) {
         return [super arrangeObjects:objects];
@@ -32,6 +33,12 @@
         }
     }
     return [super arrangeObjects:filteredObjects];
+}
+
+- (void)addObject:(id)object {
+    NSLog(@"tes");
+    
+    [super addObject:object];
 }
 
 - (void)search:(id)sender {

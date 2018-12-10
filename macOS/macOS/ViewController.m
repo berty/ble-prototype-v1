@@ -16,10 +16,28 @@
     Device *selected;
 }
 
+- (void)viewWillAppear {
+    NSLog(@"CALLED 1");
+    [super viewWillAppear];
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    if (self.loaded == NO) {
+        
+    }
+}
+
+- (void)setDeviceAC:(DeviceController *)DeviceAC
+{
+    NSLog(@"De %@", DeviceAC);
+//    if
+    
+    _DeviceAC = DeviceAC;
+        NSLog(@"%hhd %hhd", _loaded, self.loaded);
+    _loaded = YES;
+    NSLog(@"%hhd", _loaded);
     Device *firs = [[Device alloc] init:@"first"];
     Device *firs2 = [[Device alloc] init:@"firs2t"];
     firs.connected = 3;
@@ -30,9 +48,18 @@
     NSString *peerID = @"QmNXdnmutcuwAG4BcvgrEwc3znArQc9JTq6ALFote1rBoU";
     
     init([ma UTF8String], [peerID UTF8String], self.DeviceAC);
-    ((BertyCentralManagerDelegate *)getCentral().delegate).delegate = self;
-    ((BertyCentralManagerDelegate *)getCentral().delegate).deviceAC = self.DeviceAC;
+    self.centralManager = getCentral();
+    self.peripheralManager = getPeripheral();
+    NSLog(@"self.De %@", _DeviceAC);
+    [self.tableView reloadData];
+    
+    
     self.textview.delegate = self;
+    ((BertyCentralManagerDelegate *)getCentral().delegate).deviceAC = self.DeviceAC;
+    ((BertyCentralManagerDelegate *)getCentral().delegate).delegate = self;
+    
+    
+
 }
 
 - (void)addDevice:(Device *) dev {
@@ -48,11 +75,13 @@
         NSLog(@" id2 : %@ , %lu", segue.identifier, self.tableView.selectedRow);
         DeviceViewController *view = (DeviceViewController *)segue.destinationController;
         view.device = self.DeviceAC.arrangedObjects[self.tableView.selectedRow];
-        
+        view.cbc = getCentral();
+        view.cbm = getPeripheral();
     }
 }
 
 - (BOOL)shouldPerformSegueWithIdentifier:(NSStoryboardSegueIdentifier)identifier sender:(id)sender {
+    NSLog(@"iden %@", identifier);
     if ([identifier isEqualToString:@"DeviceView"]) {
         if (self.tableView.selectedRow > [(NSArray*)[self.DeviceAC arrangedObjects] count]) {
             return NO;
@@ -66,8 +95,11 @@
 }
 
 - (IBAction)service:(id)sender {
-    NSLog(@"Service Button clicked %@", getPeripheral().delegate);
-    [getPeripheral() addService:[BertyUtils sharedUtils].bertyService];
+    NSLog(@"Service Button clicked %@ %@ %hhd", getPeripheral(), getPeripheral().delegate, [BertyUtils sharedUtils].serviceAdded);
+    if ([BertyUtils sharedUtils].serviceAdded == NO) {
+        [BertyUtils sharedUtils].serviceAdded = YES;
+        [getPeripheral() addService:[BertyUtils sharedUtils].bertyService];
+    }
 }
 
 - (IBAction)adv:(id)sender {
@@ -79,7 +111,17 @@
 }
 
 - (IBAction)scan:(id)sender {
-    [getCentral() scanForPeripheralsWithServices:nil options:@{CBCentralManagerScanOptionAllowDuplicatesKey:@YES}];
+    NSLog(@"SCAN %@, %@, %@", getCentral(), getCentral().delegate, self.DeviceAC);
+    @try {
+//        ((BertyCentralManagerDelegate *)getCentral().delegate).deviceAC = self.DeviceAC;
+        [getCentral() stopScan];
+        [getCentral() scanForPeripheralsWithServices:@[[BertyUtils sharedUtils].serviceUUID] options:@{CBCentralManagerScanOptionAllowDuplicatesKey:@YES}];
+    } @catch (NSException *exception) {
+        NSLog(@"%@", exception.reason);
+    }
+    @finally {
+        NSLog(@"Finally condition");
+    }
 
 //    [getCentral() scanForPeripheralsWithServices:@[[BertyUtils sharedUtils].serviceUUID] options:@{CBCentralManagerScanOptionAllowDuplicatesKey:@YES}];
     NSLog(@"scan Button clicked");
@@ -116,5 +158,19 @@
     [self.DeviceAC rearrangeObjects];
 }
 
+- (void)viewWillDisappear {
+    NSLog(@"VIEW DISAPEARING");
+}
+
+- (void)viewDidDisappear {
+    NSLog(@"VIEW DISAPEARIN123G");
+//    [getPeripheral() removeService:[BertyUtils sharedUtils].bertyService];
+//    for (Device *dev in self.DeviceAC.arrangedObjects) {
+//        NSLog(@"dev %@", dev);
+//        if (dev.peripheral != nil) {
+//            [getCentral() cancelPeripheralConnection:dev.peripheral];
+//        }
+//    }
+}
 
 @end

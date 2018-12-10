@@ -12,14 +12,15 @@
 #import <Foundation/Foundation.h>
 #include <signal.h>
 
-CBCentralManager *centralManager;
+
 CBPeripheralManager *peripheralManager;
+CBCentralManager *centralManager;
 
 void handleSigInt(int sig) {
     exit(-1);
 }
 
-CBCentralManager * getCentral() {
+CBCentralManager *getCentral() {
     return centralManager;
 }
 
@@ -42,8 +43,8 @@ void init(char *ma, char *peerID, NSViewController *vc) {
     if (centralManager == nil && peripheralManager == nil) {
         BertyPeripheralDelegate *peripheralDelegate = [[BertyPeripheralDelegate alloc] init];
 
-        
-
+//        dispatch_async(dispatch_get_main_queue(), ^{
+//        dispactch_async(dispactch_get_main)
         BCMD = [[BertyCentralManagerDelegate alloc]initWithPeripheralDelegate:peripheralDelegate];
         
         BPMD = [[BertyPeripheralManagerDelegate alloc]initWithPeripheralDelegate:peripheralDelegate];
@@ -60,12 +61,11 @@ void init(char *ma, char *peerID, NSViewController *vc) {
         
         [BCMD centralManagerDidUpdateState:centralManager];
         [BPMD peripheralManagerDidUpdateState:peripheralManager];
-        NSLog(@"pe %@", peripheralManager.delegate);
-        NSLog(@"pe %@", peripheralManager);
         [BertyUtils setMa:[NSString stringWithUTF8String:ma]];
         [BertyUtils setPeerID:[NSString stringWithUTF8String:peerID]];
         NSSetUncaughtExceptionHandler(handleException);
         initSignalHandling();
+//        });
     }
 }
 

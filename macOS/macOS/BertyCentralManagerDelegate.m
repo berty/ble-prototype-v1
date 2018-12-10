@@ -24,6 +24,11 @@
     return self;
 }
 
+- (void)setDeviceAC:(DeviceController *)deviceAC {
+    NSLog(@"setter called");
+    _deviceAC = deviceAC;
+}
+
 /*!
  *  @method centralManagerDidUpdateState:
  *
@@ -117,27 +122,25 @@
  *
  */
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *, id> *)advertisementData RSSI:(NSNumber *)RSSI {
-//    NSLog(@"centralManger: central didDiscoverPeripheral");
+    NSLog(@"centralManger: central didDiscoverPeripheral");
     if (![devices objectForKey:[peripheral.identifier UUIDString]]) {
+        NSArray <CBPeripheral *> * peripherals = [central retrievePeripheralsWithIdentifiers:@[peripheral.identifier]];
+        for (CBPeripheral *nd in peripherals) {
+            NSLog(@"nd %ld", (long)nd.state);
+        }
+        NSLog(@"DELEGATE %@", self.peripheralDelegate);
+        [peripheral setDelegate:self.peripheralDelegate];
         Device *dev = [[Device alloc] init:[peripheral.identifier UUIDString]];
         [devices setObject:dev forKey:[peripheral.identifier UUIDString]];
         dev.peripheral = peripheral;
         dev.advData = advertisementData;
+//        [peripheral addObserver:self.peripheralDelegate forKeyPath:@"state" options:0 context:nil];
         dispatch_async(dispatch_get_main_queue(), ^{
+        NSLog(@"test %@", self.deviceAC);
             [self.deviceAC addObject:dev];
-//        if ([self.delegate respondsToSelector:@selector(addDevice:)]) {
-//            [self.delegate addDevice:dev];
-//        }
-            
-                       });
+            [self.deviceAC rearrangeObjects];
+        });
     }
-//    if (![BertyUtils inDevices:peripheral]) {
-//        NSLog(@"centralManger: central didDiscoverPeripheral: %@ RSSI %@ advertisementData: %@", [peripheral.identifier UUIDString], [RSSI stringValue], advertisementData);
-//        [peripheral setDelegate:self.peripheralDelegate];
-//        BertyDevice *device = [[BertyDevice alloc] initWithPeripheral:peripheral withCentralManager:central];
-//        [BertyUtils addDevice:device];
-//        [central connectPeripheral:peripheral options:nil];
-//    }
 }
 
 /*!
@@ -156,14 +159,15 @@
         dev.connected = 1;
         return;
     });
-//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-//        BertyDevice *bDevice = [BertyUtils getDevice:peripheral];
-//        if (bDevice == nil) {
-//            NSLog(@"centralManger: central didConnectPeripheral error unknown peripheral connected");
-//            return;
-//        }
-//        dispatch_semaphore_signal(bDevice.connSema);
-//    });
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        BertyDevice *bDevice = [BertyUtils getDevice:peripheral];
+        if (bDevice == nil) {
+            NSLog(@"centralManger: central didConnectPeripheral error unknown peripheral connected");
+            bDevice = [[BertyDevice alloc] initWithPeripheral:peripheral withCentralManager:central];
+            [BertyUtils addDevice:bDevice];
+        }
+        dispatch_semaphore_signal(bDevice.connSema);
+    });
 }
 
 /*!
@@ -195,16 +199,15 @@
  */
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error {
     NSLog(@"centralManger: central didDisconnectPeripheral: %@ %@", [peripheral.identifier UUIDString], error);
+    
     dispatch_async(dispatch_get_main_queue(), ^{
-    Device *dev = [self->devices objectForKey:[peripheral.identifier UUIDString]];
-    
-    dev.connected = 3;
-    
-//    if ([self.delegate respondsToSelector:@selector(removeDevice:)]) {
-//        [self.delegate removeDevice:dev];
-//    }
-        
-                   });
+        Device *dev = [self->devices objectForKey:[peripheral.identifier UUIDString]];
+        dev.connected = 3;
+        [self.deviceAC removeObject:dev];
+        [self->devices removeObjectForKey:[peripheral.identifier UUIDString]];
+        [BertyUtils removeDevice:[BertyUtils getDevice:peripheral]];
+//        dev.peripheral = nil;
+    });
     return;
     
 //    BertyDevice *bDevice = [BertyUtils getDevice:peripheral];

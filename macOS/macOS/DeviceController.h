@@ -17,6 +17,8 @@
 
 - (void)setSearchString:(NSString *)aString;
 - (NSArray *)arrangeObjects:(NSArray *)objects;
+- (void)addObject:(id)object;
+- (id)copyWithZone:(NSZone *)zone;
 
 @end
 

@@ -45,6 +45,7 @@ extern CBPeripheralManager *peripheralManager;
 + (nullable BertyDevice *)getDeviceFromRequest:(CBATTRequest *)request;
 + (nullable BertyDevice *)getDeviceFromMa:(NSString *)ma;
 + (nullable BertyDevice *)getDeviceFromPeerID:(NSString *)peerID;
++ (nullable CBService *)getServices:(CBPeripheral *)peripheral;
 + (Boolean)inDevices:(CBPeripheral *)peripheral;
 + (Boolean)inDevicesWithPeerID:(NSString *)peerID;
 + (Boolean)inDevicesWithMa:(NSString *)Ma;
