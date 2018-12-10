@@ -3,6 +3,7 @@ package tech.berty.bletesting;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
@@ -18,7 +19,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
+
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -76,6 +77,10 @@ public class Manager {
         }
 
         return instance;
+    }
+
+    public static BluetoothAdapter getAdapter() {
+        return instance.mBluetoothAdapter;
     }
 
     public void setmContext(Context ctx) {
@@ -137,12 +142,12 @@ public class Manager {
                     BertyUtils.logger("debug", TAG, "test " + svc + " " + mBluetoothGattServer);
 
                     mBluetoothGattServer.addService(svc);
-                    ScanSettings settings2 = BertyScan.createScanSetting();
-                    ScanFilter filter = BertyScan.makeFilter();
-                    BertyUtils.logger("debug", TAG, "starting scan");
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        mBluetoothLeScanner.startScan(Arrays.asList(filter), settings2, mScanCallback);
-                    }
+//                    ScanSettings settings2 = BertyScan.createScanSetting();
+//                    ScanFilter filter = BertyScan.makeFilter();
+//                    BertyUtils.logger("debug", TAG, "starting scan");
+//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//                        mBluetoothLeScanner.startScan(Arrays.asList(filter), settings2, mScanCallback);
+//                    }
                 }
 
             } catch (Exception e) {
@@ -167,7 +172,7 @@ public class Manager {
             bDevice.gatt.close();
             bDevice.gatt = null;
             bDevice.device = null;
-            Log.e(TAG, "CLOSE");
+            BertyUtils.logger("debug", TAG, "Close");
         }
         synchronized (bertyDevices) {
             bertyDevices.remove(bDevice.addr);
@@ -208,7 +213,7 @@ public class Manager {
         ScanSettings settings = BertyScan.createScanSetting();
         ScanFilter filter = BertyScan.makeFilter();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//            mBluetoothLeScanner.startScan(Arrays.asList(filter), settings, mScanCallback);
+            mBluetoothLeScanner.startScan(Arrays.asList(filter), settings, mScanCallback);
         }
     }
 
@@ -245,6 +250,22 @@ public class Manager {
         return true;
     }
 
+    public boolean write(byte[] p, BertyDevice bertyDevice) {
+        if (bertyDevice == null) {
+            BertyUtils.logger("error", TAG, "writing on unknow device failed");
+            return false;
+        }
+
+        try {
+            bertyDevice.write(p);
+        } catch (Exception e) {
+            BertyUtils.logger("error", TAG, "writing error " + e.getMessage());
+
+            return false;
+        }
+
+        return true;
+    }
     // @Override
     // protected void finalize() throws Throwable {
     //     try {

@@ -12,7 +12,6 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.os.Build;
-import android.util.Log;
 
 import java.nio.charset.Charset;
 import java.util.UUID;
@@ -168,24 +167,24 @@ public class BertyGattServer extends BluetoothGattServerCallback {
         } else if (charID.equals(BertyUtils.CLOSER_UUID)) {
 //            // TODO
         } else if (charID.equals(BertyUtils.PEER_ID_UUID)) {
-            Log.e(TAG, "recv " + new String(value, Charset.forName("UTF-8")));
+            BertyUtils.logger("debug", TAG, "recv " + new String(value, Charset.forName("UTF-8")));
             if (bDevice.peerID != null) {
                 bDevice.peerID += new String(value, Charset.forName("UTF-8"));
             } else {
                 bDevice.peerID = new String(value, Charset.forName("UTF-8"));
             }
 
-            Log.e(TAG, "rep needed" + responseNeeded+ "prepared " + preparedWrite + " transid " + requestId  + " offset " + offset + " len: " + value.length);
+            BertyUtils.logger("debug", TAG, "rep needed" + responseNeeded+ "prepared " + preparedWrite + " transid " + requestId  + " offset " + offset + " len: " + value.length);
             if (responseNeeded) {
                 mBluetoothGattServer.sendResponse(device, requestId, GATT_SUCCESS, offset, value);
             }
             if (bDevice.peerID.length() == 46) {
-                Log.e(TAG, "COUNTDONW");
+                BertyUtils.logger("debug", TAG, "Countdown");
                 bDevice.latchRdy.countDown();
             }
         } else if(charID.equals(BertyUtils.MA_UUID)) {
-            Log.e(TAG, "recv " + new String(value, Charset.forName("UTF-8")));
-            Log.e(TAG, "rep needed" + responseNeeded+ "prepared " + preparedWrite + " transid " + requestId  + " offset " + offset + " len: " + value.length);
+            BertyUtils.logger("debug", TAG, "recv " + new String(value, Charset.forName("UTF-8")));
+            BertyUtils.logger("debug", TAG,  "rep needed" + responseNeeded+ "prepared " + preparedWrite + " transid " + requestId  + " offset " + offset + " len: " + value.length);
             if (bDevice.ma != null) {
                 bDevice.ma += new String(value, Charset.forName("UTF-8"));
             } else {

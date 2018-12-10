@@ -10,7 +10,6 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.os.Build;
-import android.util.Log;
 
 import java.nio.charset.Charset;
 import java.util.UUID;
@@ -116,7 +115,7 @@ public class BertyGatt extends BluetoothGattCallback {
                 return;
             }
         }
-        Log.e(TAG, "onServicesDiscovered() error service not known");
+        BertyUtils.logger("error", TAG, "onServicesDiscovered() error service not known");
 
         BertyUtils.removeDevice(bDevice);
         super.onServicesDiscovered(gatt, status);

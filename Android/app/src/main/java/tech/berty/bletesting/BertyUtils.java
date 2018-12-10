@@ -50,6 +50,11 @@ public class BertyUtils {
             default: Log.e(tag, log);
                 break;
         }
+
+        ConnectActivity instance = ConnectActivity.getInstance();
+        if (instance != null) {
+            instance.putLogs(level, tag, log);
+        }
     }
 
     public String ma;
@@ -92,10 +97,10 @@ public class BertyUtils {
     }
 
     public static boolean removeDevice(BertyDevice bDevice) {
-        Log.e(TAG, "Remove Device");
-        synchronized (bertyDevices) {
-            bertyDevices.remove(bDevice.addr);
-        }
+//        Log.e(TAG, "Remove Device");
+//        synchronized (bertyDevices) {
+//            bertyDevices.remove(bDevice.addr);
+//        }
         bDevice.gatt.disconnect();
         bDevice.gatt.close();
         bDevice.device = null;

@@ -7,46 +7,69 @@
     tools:context=".MainActivity">
 
     <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
+        android:id="@+id/button1"
+        android:layout_width="142dp"
         android:layout_height="wrap_content"
-        android:text="Scanning"
-        tools:layout_editor_absoluteX="212dp"
-        tools:layout_editor_absoluteY="95dp" />
-
-    <Button
-        android:id="@+id/button3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Advertising"
-        tools:layout_editor_absoluteX="51dp"
-        tools:layout_editor_absoluteY="95dp" />
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="32dp"
+        android:text="Start BLE"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/button2"
-        android:layout_width="wrap_content"
+        android:layout_width="142dp"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="36dp"
+        android:layout_marginTop="32dp"
         android:text="Stop BLE"
-        tools:layout_editor_absoluteX="212dp"
-        tools:layout_editor_absoluteY="26dp" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="142dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="28dp"
+        android:text="Advertising   \u25B6"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button1" />
 
     <Button
         android:id="@+id/button4"
-        android:layout_width="wrap_content"
+        android:layout_width="142dp"
         android:layout_height="wrap_content"
-        android:text="Start BLE"
-        tools:layout_editor_absoluteX="60dp"
-        tools:layout_editor_absoluteY="26dp" />
+        android:layout_marginEnd="36dp"
+        android:layout_marginTop="28dp"
+        android:text="Scanning   \u25B6"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button2" />
 
     <ScrollView
-        android:layout_width="317dp"
-        android:layout_height="311dp"
-        tools:layout_editor_absoluteX="34dp"
-        tools:layout_editor_absoluteY="172dp">
+        android:id="@+id/scrollView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="42dp"
+        android:layout_marginEnd="42dp"
+        android:layout_marginStart="42dp"
+        android:layout_marginTop="24dp"
+        android:scrollbarStyle="insideOverlay"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button4"
+        android:background="@drawable/stroke_bg"
+        android:fillViewport="true" >
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/linearLayout"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" />
+            android:layout_margin="10dp"
+            android:orientation="vertical" >
+        </LinearLayout>
     </ScrollView>
+
 </android.support.constraint.ConstraintLayout>

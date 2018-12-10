@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.os.Build;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
@@ -83,7 +82,7 @@ public class BertyDevice {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Log.e(TAG, "waitConn()2");
+                BertyUtils.logger("debug", TAG, "waitConn() 2 called");
                 Thread.currentThread().setName("WaitConn");
                 try {
                     latchConn.await();
@@ -160,7 +159,7 @@ public class BertyDevice {
                         } while (offset < length);
 
                         while (!toSend.isEmpty()) {
-                            Log.e(TAG, "MA");
+                            BertyUtils.logger("debug", TAG, "MA");
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                                 maCharacteristic.setValue(toSend.get(0));
                                 while (!gatt.writeCharacteristic(maCharacteristic)) {
@@ -187,7 +186,7 @@ public class BertyDevice {
                         } while (offset < length);
 
                         while (!toSend.isEmpty()) {
-                            Log.e(TAG, "PeerID");
+                            BertyUtils.logger("debug", TAG, "PeerID");
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                                 peerIDCharacteristic.setValue(toSend.get(0));
                                 while (!gatt.writeCharacteristic(peerIDCharacteristic)) {
@@ -197,16 +196,16 @@ public class BertyDevice {
                             }
                             toSend.remove(0);
                         }
-                        Log.e(TAG, "COUNTDOWN1");
+                        BertyUtils.logger("debug", TAG, "Countdown 1");
                         latchRdy.countDown();
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "Error waiting/writing " + e.getMessage());
+                    BertyUtils.logger("error", TAG, "Error waiting/writing " + e.getMessage());
                 }
-
             }
         }).start();
     }
+
 
     public void populateCharacteristic() {
         BertyUtils.logger("debug", TAG, "populateCharacteristic() called");

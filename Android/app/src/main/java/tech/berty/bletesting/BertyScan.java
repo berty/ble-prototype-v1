@@ -11,9 +11,10 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.os.Build;
 import android.os.ParcelUuid;
-import android.util.Log;
+import android.util.SparseArray;
 
 import java.util.List;
+import java.nio.charset.StandardCharsets;
 
 import static android.bluetooth.BluetoothProfile.GATT;
 import static android.bluetooth.BluetoothProfile.GATT_SERVER;
@@ -109,15 +110,16 @@ public class BertyScan extends ScanCallback {
     }
 
     public void parseResult(ScanResult result) {
+        MainActivity.getInstance().addDeviceToList(result.getDevice().getAddress());
 
-        BluetoothDevice device = result.getDevice();
-        BertyDevice bDevice = BertyUtils.getDeviceFromAddr(device.getAddress());
-        BertyUtils.logger("debug", TAG, "parseResult() called " + bDevice);
-        if (bDevice == null) {
-            BluetoothManager mb = (BluetoothManager) mContext.getSystemService(BLUETOOTH_SERVICE);
-            Log.e(TAG, "CONN STATE  " + mb.getConnectionState(device, GATT));
-            Log.e(TAG, "CONN STATE  " + mb.getConnectionState(device, GATT_SERVER));
-            BertyUtils.addDevice(device, mContext, mGattCallback);
-        }
+//        BluetoothDevice device = result.getDevice();
+//        BertyDevice bDevice = BertyUtils.getDeviceFromAddr(device.getAddress());
+//        BertyUtils.logger("debug", TAG, "parseResult() called " + bDevice);
+//        if (bDevice == null) {
+//            BluetoothManager mb = (BluetoothManager) mContext.getSystemService(BLUETOOTH_SERVICE);
+//            Log.e(TAG, "CONN STATE  " + mb.getConnectionState(device, GATT));
+//            Log.e(TAG, "CONN STATE  " + mb.getConnectionState(device, GATT_SERVER));
+//            BertyUtils.addDevice(device, mContext, mGattCallback);
+//        }
     }
 }
