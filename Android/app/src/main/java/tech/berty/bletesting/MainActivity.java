@@ -11,14 +11,13 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.graphics.Color;
 import android.view.View;
-import android.bluetooth.BluetoothDevice;
-
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
     private static MainActivity instance;
 
-    static String ma = "d5406e06-ad83-4622-a7af-38dbe8c4fabe";
+    static String multiAddr = "d5406e06-ad83-4622-a7af-38dbe8c4fabe";
     static String peerID = "QmNXdnmutcuwAG4BcvgrEwc3znArQc9JTq6ALFote1rBoU";
 
     Button startButton;
@@ -35,16 +34,14 @@ public class MainActivity extends AppCompatActivity {
     static String scanPlay = "Scanning   \u25B6";
     static String scanStop = "Scanning   \u25A0";
 
+    ArrayList<String> scanned;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-
-        final Manager manager = Manager.getInstance();
-        final Activity curActivity = this;
-
-        manager.setmContext(this.getApplicationContext());
+        final Activity currentActivity = this;
 
         startButton = findViewById(R.id.button1);
         stopButton = findViewById(R.id.button2);
@@ -52,21 +49,26 @@ public class MainActivity extends AppCompatActivity {
         scanButton = findViewById(R.id.button4);
         table = findViewById(R.id.linearLayout);
 
+        Manager.setContext(this.getApplicationContext());
+        Manager.setMultiAddr(multiAddr);
+        Manager.setPeerID(peerID);
+
         startButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                manager.initScannerAndAdvertiser(curActivity);
-                manager.setMa(ma);
-                manager.setPeerID(peerID);
-                toggleButtons(true);
+                if (Manager.initBluetoothService(currentActivity)) {
+                    toggleButtons(true);
+                }
             }
         });
 
         stopButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                manager.closeScannerAndAdvertiser();
-                advButton.setText(advPlay);
-                scanButton.setText(scanPlay);
-                toggleButtons(false);
+                if (Manager.closeBluetoothService()) {
+                    advButton.setText(advPlay);
+                    scanButton.setText(scanPlay);
+                    clearDeviceList();
+                    toggleButtons(false);
+                }
             }
         });
 
@@ -75,10 +77,10 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if (!advOn) {
                     advButton.setText(advStop);
-                    manager.startAdvertising();
+                    Manager.startAdvertising();
                 } else {
                     advButton.setText(advPlay);
-                    manager.stopAdvertising();
+                    Manager.stopAdvertising();
                 }
                 advOn = !advOn;
             }
@@ -88,11 +90,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (!scanOn) {
+                    clearDeviceList();
                     scanButton.setText(scanStop);
-                    manager.startScanning();
+                    Manager.startScanning();
                 } else {
                     scanButton.setText(scanPlay);
-                    manager.stopScanning();
+                    Manager.stopScanning();
                 }
                 scanOn = !scanOn;
             }
@@ -113,25 +116,33 @@ public class MainActivity extends AppCompatActivity {
         scanButton.setEnabled(toggle);
     }
 
+    public void clearDeviceList() {
+        table.removeAllViews();
+        scanned = new ArrayList<String>();
+    }
+
     public void addDeviceToList(final String address) {
-        TextView text = new TextView(this);
-        text.setText(address);
-        text.setTextSize(25);
-        text.setTextColor(Color.BLUE);
+        if (!scanned.contains(address)) {
+            scanned.add(address);
+            TextView text = new TextView(this);
+            text.setText(address);
+            text.setTextSize(25);
+            text.setTextColor(Color.BLUE);
 
-        LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        params.setMargins(0,0,0,16);
-        text.setLayoutParams(params);
+            LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+            params.setMargins(0, 0, 0, 16);
+            text.setLayoutParams(params);
 
-        text.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent connIntent = new Intent(getApplicationContext(), ConnectActivity.class);
-                Bundle bundle = new Bundle();
-                bundle.putString("address", address);
-                connIntent.putExtras(bundle);
-                startActivityForResult(connIntent, 0);
-            }
-        });
-        table.addView(text);
+            text.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    Intent connIntent = new Intent(getApplicationContext(), ConnectActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putString("address", address);
+                    connIntent.putExtras(bundle);
+                    startActivityForResult(connIntent, 0);
+                }
+            });
+            table.addView(text);
+        }
     }
 }

@@ -143,7 +143,7 @@ public class BertyDevice {
                 try {
                     synchronized (toSend) {
                         gatt.requestMtu(555);
-                        byte[] value = Manager.getMa().getBytes(Charset.forName("UTF-8"));
+                        byte[] value = Manager.getMultiAddr().getBytes(Charset.forName("UTF-8"));
                         int length = value.length;
                         int offset = 0;
 

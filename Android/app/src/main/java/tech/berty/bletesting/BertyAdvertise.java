@@ -16,7 +16,7 @@ import static tech.berty.bletesting.BertyUtils.SERVICE_UUID;
 public class BertyAdvertise extends AdvertiseCallback {
     private static final String TAG = "advertise";
 
-    public static AdvertiseData makeAdvertiseData() {
+    public static AdvertiseData buildAdvertiseData() {
         ParcelUuid pUuid = new ParcelUuid(SERVICE_UUID);
 
         AdvertiseData.Builder builder = new AdvertiseData.Builder()
@@ -27,13 +27,13 @@ public class BertyAdvertise extends AdvertiseCallback {
         return builder.build();
     }
 
-    public static AdvertiseSettings createAdvSettings(boolean connectible, int timeoutMillis) {
+    public static AdvertiseSettings buildAdvertiseSettings(boolean connectable, int mode, int power, int timeout) {
         AdvertiseSettings.Builder builder = new AdvertiseSettings.Builder();
 
-        builder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-                .setConnectable(connectible)
-                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
-                .setTimeout(timeoutMillis);
+        builder.setAdvertiseMode(mode)
+                .setConnectable(connectable)
+                .setTxPowerLevel(power)
+                .setTimeout(timeout);
 
         return builder.build();
     }

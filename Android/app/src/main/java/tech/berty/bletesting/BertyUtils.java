@@ -24,17 +24,20 @@ import static android.bluetooth.BluetoothGattService.SERVICE_TYPE_PRIMARY;
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class BertyUtils {
     final static int BLUETOOTH_ENABLE_REQUEST = 1;
-    final static UUID SERVICE_UUID = UUID.fromString("A06C6AB8-886F-4D56-82FC-2CF8610D6665");
+
+    final static UUID SERVICE_UUID = UUID.fromString("A06C6AB8-886F-4D56-82FC-2CF8610D6664");
     final static UUID WRITER_UUID = UUID.fromString("000CBD77-8D30-4EFF-9ADD-AC5F10C2CC1C");
     final static UUID CLOSER_UUID = UUID.fromString("AD127A46-D065-4D72-B15A-EB2B3DA20561");
     final static UUID MA_UUID = UUID.fromString("9B827770-DC72-4C55-B8AE-0870C7AC15A8");
     final static UUID PEER_ID_UUID = UUID.fromString("0EF50D30-E208-4315-B323-D05E0A23E6B3");
+
     final static BluetoothGattService mService = new BluetoothGattService(SERVICE_UUID, SERVICE_TYPE_PRIMARY);
     final static BluetoothGattCharacteristic maCharacteristic = new BluetoothGattCharacteristic(MA_UUID, PROPERTY_WRITE, PERMISSION_WRITE);
     final static BluetoothGattCharacteristic peerIDCharacteristic = new BluetoothGattCharacteristic(PEER_ID_UUID, PROPERTY_WRITE, PERMISSION_WRITE);
     final static BluetoothGattCharacteristic writerCharacteristic = new BluetoothGattCharacteristic(WRITER_UUID, PROPERTY_WRITE, PERMISSION_WRITE);
     final static BluetoothGattCharacteristic closerCharacteristic = new BluetoothGattCharacteristic(CLOSER_UUID, PROPERTY_WRITE, PERMISSION_WRITE);
     final static HashMap<String, BertyDevice> bertyDevices = new HashMap<>();
+
     private static final String TAG = "utils";
 
     public static void logger(String level, String tag, String log) {
@@ -105,7 +108,6 @@ public class BertyUtils {
         bDevice.gatt.close();
         bDevice.device = null;
         bDevice.gatt = null;
-        bDevice = null;
         return true;
     }
 

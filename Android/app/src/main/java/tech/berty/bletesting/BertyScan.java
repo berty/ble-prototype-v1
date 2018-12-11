@@ -26,9 +26,9 @@ import static tech.berty.bletesting.BertyUtils.SERVICE_UUID;
 public class BertyScan extends ScanCallback {
     private static final String TAG = "scan";
 
-    public Context mContext;
-
-    public BertyGatt mGattCallback;
+//    public Context mContext;
+//
+//    public BertyGatt mGattCallback;
 
     public static ScanSettings createScanSetting() {
         ScanSettings settings = new ScanSettings.Builder()

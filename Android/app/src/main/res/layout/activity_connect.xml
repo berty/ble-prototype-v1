@@ -51,8 +51,8 @@
         android:layout_marginTop="30dp"
         android:ems="10"
         android:maxLength="20"
-        android:inputType="textPersonName"
-        android:hint="Data"
+        android:inputType="textNoSuggestions"
+        android:hint="Bytes (less than or equal 20)"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button1b" />

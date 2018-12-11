@@ -1,6 +1,5 @@
 package tech.berty.bletesting;
 
-import android.content.Context;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,17 +11,12 @@ import android.widget.EditText;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothDevice;
 
-import java.nio.charset.Charset;
-
 import static android.bluetooth.BluetoothProfile.GATT;
 import static android.bluetooth.BluetoothProfile.GATT_SERVER;
 
 public class ConnectActivity extends AppCompatActivity {
     public static String TAG = "connect_activity";
     private static ConnectActivity instance;
-
-    public BertyGatt mGattCallback;
-    public Context mContext;
 
     String address;
     BertyDevice bertydDevice;
@@ -35,6 +29,8 @@ public class ConnectActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        BertyUtils.logger("debug", TAG, "TEST 1");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connect);
 
@@ -48,19 +44,20 @@ public class ConnectActivity extends AppCompatActivity {
         connButton = findViewById(R.id.button1b);
         sendButton = findViewById(R.id.button2b);
         dataInput = findViewById(R.id.editText);
-        table = findViewById(R.id.linearLayout);
+        table = findViewById(R.id.linearLayout1b);
 
+        bertydDevice = BertyUtils.getDeviceFromAddr(address);
         toggleButtons(isConnected());
 
         connButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                bertydDevice = BertyUtils.getDeviceFromAddr(address);
-                if (bertydDevice == null) {
+                if (!isConnected()) {
                     BluetoothDevice device = Manager.getAdapter().getRemoteDevice(address);
                     BluetoothManager manager = (BluetoothManager)instance.getApplicationContext().getSystemService(BLUETOOTH_SERVICE);
+                    BertyUtils.logger("debug", TAG, "Device " + device.toString());
                     BertyUtils.logger("debug", TAG, "CONN STATE  " + manager.getConnectionState(device, GATT));
                     BertyUtils.logger("debug", TAG, "CONN STATE  " + manager.getConnectionState(device, GATT_SERVER));
-                    BertyUtils.addDevice(device, mContext, mGattCallback);
+                    BertyUtils.addDevice(device, Manager.getContext(), Manager.getGattCallback());
                 }
             }
         });
@@ -68,11 +65,13 @@ public class ConnectActivity extends AppCompatActivity {
         sendButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 String data = dataInput.getText().toString();
-                Manager.getInstance().write(data.getBytes(), bertydDevice);
+                Manager.write(data.getBytes(), bertydDevice);
             }
         });
 
         instance = this;
+        BertyUtils.logger("debug", TAG, "TEST 2");
+
     }
 
 

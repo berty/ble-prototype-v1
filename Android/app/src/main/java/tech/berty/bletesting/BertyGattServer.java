@@ -26,17 +26,21 @@ import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTED;
 public class BertyGattServer extends BluetoothGattServerCallback {
     private static final String TAG = "gatt_server";
 
-    public BluetoothGattServer mBluetoothGattServer;
-
-    public Context mContext;
-
-    public BertyGatt mGattCallback;
+    private static BluetoothGattServer mBluetoothGattServer;
 
     public BertyGattServer() {
         super();
         Thread.currentThread().setName("BertyGattServer");
     }
 
+    public static void setBluetoothGattServer(BluetoothGattServer bluetoothGattServer) {
+        mBluetoothGattServer = bluetoothGattServer;
+    }
+
+    public static BluetoothGattServer getBluetoothGattServer() {
+        return mBluetoothGattServer;
+    }
+    
     public void sendReadResponse(byte[] value, BluetoothDevice device, int offset, int requestId) {
         BertyUtils.logger("debug", TAG, "sendReadResponse() called");
         if (offset > value.length) {
@@ -68,7 +72,7 @@ public class BertyGattServer extends BluetoothGattServerCallback {
         BertyDevice bDevice = BertyUtils.getDeviceFromAddr(device.getAddress());
         if (status == GATT_SUCCESS && newState == STATE_CONNECTED && bDevice == null) {
 //            bDevice.latchConn.countDown();
-            BertyUtils.addDevice(device, mContext, mGattCallback);
+            BertyUtils.addDevice(device, Manager.getContext(), Manager.getGattCallback());
         } else if (newState == STATE_DISCONNECTED) {
             if (bDevice != null) {
                 BertyUtils.removeDevice(bDevice);
