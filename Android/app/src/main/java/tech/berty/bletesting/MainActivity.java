@@ -1,5 +1,6 @@
 package tech.berty.bletesting;
 
+import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
@@ -49,13 +50,12 @@ public class MainActivity extends AppCompatActivity {
         scanButton = findViewById(R.id.button4);
         table = findViewById(R.id.linearLayout);
 
-        Manager.setContext(this.getApplicationContext());
-        Manager.setMultiAddr(multiAddr);
-        Manager.setPeerID(peerID);
+        BleManager.setMultiAddr(multiAddr);
+        BleManager.setPeerID(peerID);
 
         startButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if (Manager.initBluetoothService(currentActivity)) {
+                if (BleManager.initBluetoothService(currentActivity)) {
                     toggleButtons(true);
                 }
             }
@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
         stopButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if (Manager.closeBluetoothService()) {
+                if (BleManager.closeBluetoothService()) {
                     advButton.setText(advPlay);
                     scanButton.setText(scanPlay);
                     clearDeviceList();
@@ -77,10 +77,10 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if (!advOn) {
                     advButton.setText(advStop);
-                    Manager.startAdvertising();
+                    BleManager.startAdvertising();
                 } else {
                     advButton.setText(advPlay);
-                    Manager.stopAdvertising();
+                    BleManager.stopAdvertising();
                 }
                 advOn = !advOn;
             }
@@ -92,10 +92,10 @@ public class MainActivity extends AppCompatActivity {
                 if (!scanOn) {
                     clearDeviceList();
                     scanButton.setText(scanStop);
-                    Manager.startScanning();
+                    BleManager.startScanning();
                 } else {
                     scanButton.setText(scanPlay);
-                    Manager.stopScanning();
+                    BleManager.stopScanning();
                 }
                 scanOn = !scanOn;
             }
@@ -107,6 +107,10 @@ public class MainActivity extends AppCompatActivity {
 
     public static MainActivity getInstance() {
         return instance;
+    }
+
+    public static Context getContext() {
+        return instance.getApplicationContext();
     }
 
     public void toggleButtons(Boolean toggle) {

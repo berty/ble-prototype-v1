@@ -1,56 +1,41 @@
 package tech.berty.bletesting;
 
-import android.annotation.SuppressLint;
+import android.os.Build;
 import android.annotation.TargetApi;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
+
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
-import android.content.Context;
-import android.os.Build;
-import android.os.ParcelUuid;
-import android.util.SparseArray;
 
-import java.util.List;
-import java.nio.charset.StandardCharsets;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 
 import static android.bluetooth.BluetoothProfile.GATT;
 import static android.bluetooth.BluetoothProfile.GATT_SERVER;
 import static android.content.Context.BLUETOOTH_SERVICE;
-import static tech.berty.bletesting.BertyUtils.SERVICE_UUID;
 
-@SuppressLint("LongLogTag")
+
+import java.util.List;
+
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class BertyScan extends ScanCallback {
+public class Scanner extends ScanCallback {
     private static final String TAG = "scan";
 
-//    public Context mContext;
-//
-//    public BertyGatt mGattCallback;
+    Scanner() { super(); }
 
-    public static ScanSettings createScanSetting() {
-        ScanSettings settings = new ScanSettings.Builder()
+    static ScanSettings createScanSetting() {
+        return new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                 .build();
-
-        return settings;
     }
 
-    public static ScanFilter makeFilter() {
-        ParcelUuid pUuid = new ParcelUuid(SERVICE_UUID);
-        ScanFilter filter = new ScanFilter.Builder()
-                .setServiceUuid(pUuid)
+    static ScanFilter makeFilter() {
+        return new ScanFilter.Builder()
+                .setServiceUuid(BleManager.P_SERVICE_UUID)
                 .build();
-
-        return filter;
     }
 
-    public BertyScan() {
-        super();
-        Thread.currentThread().setName("BertyScan");
-    }
 
     /**
      * Callback when a BLE advertisement has been found.
@@ -63,6 +48,9 @@ public class BertyScan extends ScanCallback {
      */
     @Override
     public void onScanResult(int callbackType, ScanResult result) {
+        Logger.put("debug", TAG, "onScanResult() called");
+        Logger.put("debug", TAG, "With callbackType: " + callbackType + ", result: " + result);
+
         parseResult(result);
         super.onScanResult(callbackType, result);
     }
@@ -74,6 +62,9 @@ public class BertyScan extends ScanCallback {
      */
     @Override
     public void onBatchScanResults(List<ScanResult> results) {
+        Logger.put("debug", TAG, "onBatchScanResult() called");
+        Logger.put("debug", TAG, "With results: " + results);
+
         for (ScanResult result:results) {
             parseResult(result);
         }
@@ -102,24 +93,31 @@ public class BertyScan extends ScanCallback {
             case SCAN_FAILED_FEATURE_UNSUPPORTED: errorString = "SCAN_FAILED_FEATURE_UNSUPPORTED";
                 break;
 
-            default: errorString = "UNKNOW FAIL";
+            default: errorString = "UNKNOWN_FAILURE";
                 break;
         }
-        BertyUtils.logger("error", TAG, "scanning failed: " + errorString);
+        Logger.put("error", TAG, "Scan failed: " + errorString);
         super.onScanFailed(errorCode);
     }
 
-    public void parseResult(ScanResult result) {
-        MainActivity.getInstance().addDeviceToList(result.getDevice().getAddress());
+    private static void parseResult(ScanResult result) {
+        Logger.put("debug", TAG, "parseResult() called with device: " + result.getDevice());
 
-//        BluetoothDevice device = result.getDevice();
-//        BertyDevice bDevice = BertyUtils.getDeviceFromAddr(device.getAddress());
-//        BertyUtils.logger("debug", TAG, "parseResult() called " + bDevice);
-//        if (bDevice == null) {
-//            BluetoothManager mb = (BluetoothManager) mContext.getSystemService(BLUETOOTH_SERVICE);
-//            Log.e(TAG, "CONN STATE  " + mb.getConnectionState(device, GATT));
-//            Log.e(TAG, "CONN STATE  " + mb.getConnectionState(device, GATT_SERVER));
-//            BertyUtils.addDevice(device, mContext, mGattCallback);
+        BluetoothDevice device = result.getDevice();
+        BluetoothManager bleManager = (BluetoothManager)MainActivity.getContext().getSystemService(BLUETOOTH_SERVICE);
+
+        if (bleManager != null) {
+            Logger.put("debug", TAG, "Client connection state: " + bleManager.getConnectionState(device, GATT));
+            Logger.put("debug", TAG, "Server connection state: " + bleManager.getConnectionState(device, GATT_SERVER));
+        } else {
+            Logger.put("error", TAG, "BLE Manager is null");
+        }
+
+        MainActivity.getInstance().addDeviceToList(device.getAddress());
+//        BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(device.getAddress());
+//
+//        if (bertyDevice == null) {
+//            DeviceManager.addDeviceToIndex(new BertyDevice(device));
 //        }
     }
 }

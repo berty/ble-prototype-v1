@@ -11,6 +11,8 @@ import android.widget.EditText;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothDevice;
 
+import java.nio.charset.Charset;
+
 import static android.bluetooth.BluetoothProfile.GATT;
 import static android.bluetooth.BluetoothProfile.GATT_SERVER;
 
@@ -29,7 +31,7 @@ public class ConnectActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        BertyUtils.logger("debug", TAG, "TEST 1");
+        Logger.put("debug", TAG, "TEST 1");
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connect);
@@ -46,18 +48,19 @@ public class ConnectActivity extends AppCompatActivity {
         dataInput = findViewById(R.id.editText);
         table = findViewById(R.id.linearLayout1b);
 
-        bertydDevice = BertyUtils.getDeviceFromAddr(address);
+        bertydDevice = DeviceManager.getDeviceFromAddr(address);
         toggleButtons(isConnected());
 
         connButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (!isConnected()) {
-                    BluetoothDevice device = Manager.getAdapter().getRemoteDevice(address);
+                    BluetoothDevice device = BleManager.getAdapter().getRemoteDevice(address);
                     BluetoothManager manager = (BluetoothManager)instance.getApplicationContext().getSystemService(BLUETOOTH_SERVICE);
-                    BertyUtils.logger("debug", TAG, "Device " + device.toString());
-                    BertyUtils.logger("debug", TAG, "CONN STATE  " + manager.getConnectionState(device, GATT));
-                    BertyUtils.logger("debug", TAG, "CONN STATE  " + manager.getConnectionState(device, GATT_SERVER));
-                    BertyUtils.addDevice(device, Manager.getContext(), Manager.getGattCallback());
+                    BertyDevice bertyDevice = new BertyDevice(device);
+                    Logger.put("debug", TAG, "Device " + device.toString());
+                    Logger.put("debug", TAG, "CONN STATE  " + manager.getConnectionState(device, GATT));
+                    Logger.put("debug", TAG, "CONN STATE  " + manager.getConnectionState(device, GATT_SERVER));
+                    DeviceManager.addDeviceToIndex(bertyDevice);
                 }
             }
         });
@@ -65,12 +68,12 @@ public class ConnectActivity extends AppCompatActivity {
         sendButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 String data = dataInput.getText().toString();
-                Manager.write(data.getBytes(), bertydDevice);
+                DeviceManager.write(data.getBytes(), bertydDevice);
             }
         });
 
         instance = this;
-        BertyUtils.logger("debug", TAG, "TEST 2");
+        Logger.put("debug", TAG, "TEST 2");
 
     }
 
@@ -88,23 +91,10 @@ public class ConnectActivity extends AppCompatActivity {
         sendButton.setEnabled(connected);
     }
 
-    public void putLogs(String level, String tag, String log) {
+    public void putMessage(byte[] message) {
         TextView text = new TextView(this);
-        text.setText(tag + ": " + log);
+        text.setText(new String(message, Charset.forName("UTF-8")));
         text.setTextSize(20);
-
-        switch (level) {
-            case "debug":  text.setTextColor(Color.DKGRAY);
-                break;
-            case "info":  text.setTextColor(Color.GREEN);
-                break;
-            case "warn":  text.setTextColor(Color.YELLOW);
-                break;
-            case "error":  text.setTextColor(Color.RED);
-                break;
-            default: text.setTextColor(Color.BLUE);
-                break;
-        }
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         params.setMargins(0,0,0,10);

@@ -1,46 +1,34 @@
 package tech.berty.bletesting;
 
-import android.annotation.SuppressLint;
+import android.os.Build;
 import android.annotation.TargetApi;
+
 import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
-import android.os.Build;
-import android.os.ParcelUuid;
 
-import static tech.berty.bletesting.BertyUtils.SERVICE_UUID;
-
-@SuppressLint("LongLogTag")
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class BertyAdvertise extends AdvertiseCallback {
+public class Advertiser extends AdvertiseCallback {
     private static final String TAG = "advertise";
 
-    public static AdvertiseData buildAdvertiseData() {
-        ParcelUuid pUuid = new ParcelUuid(SERVICE_UUID);
+    Advertiser() { super(); }
 
-        AdvertiseData.Builder builder = new AdvertiseData.Builder()
+    static AdvertiseData buildAdvertiseData() {
+        return new AdvertiseData.Builder()
                 .setIncludeDeviceName(false)
                 .setIncludeTxPowerLevel(false)
-                .addServiceUuid(pUuid);
-
-        return builder.build();
+                .addServiceUuid(BleManager.P_SERVICE_UUID)
+                .build();
     }
 
-    public static AdvertiseSettings buildAdvertiseSettings(boolean connectable, int mode, int power, int timeout) {
-        AdvertiseSettings.Builder builder = new AdvertiseSettings.Builder();
-
-        builder.setAdvertiseMode(mode)
+    static AdvertiseSettings buildAdvertiseSettings(boolean connectable, int mode, int power, int timeout) {
+        return new AdvertiseSettings.Builder()
+                .setAdvertiseMode(mode)
                 .setConnectable(connectable)
                 .setTxPowerLevel(power)
-                .setTimeout(timeout);
-
-        return builder.build();
-    }
-
-    public BertyAdvertise() {
-        super();
-        Thread.currentThread().setName("BertyAdvertise");
+                .setTimeout(timeout)
+                .build();
     }
 
     /**
@@ -52,7 +40,7 @@ public class BertyAdvertise extends AdvertiseCallback {
      */
     @Override
     public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-        BertyUtils.logger("debug", TAG, "onStartSuccess advertising: " + settingsInEffect);
+        Logger.put("debug", TAG, "onStartSuccess advertising: " + settingsInEffect);
         super.onStartSuccess(settingsInEffect);
     }
 
@@ -64,8 +52,8 @@ public class BertyAdvertise extends AdvertiseCallback {
      */
     @Override
     public void onStartFailure(int errorCode) {
-
         String errorString;
+
         switch (errorCode) {
             case ADVERTISE_FAILED_DATA_TOO_LARGE: errorString = "ADVERTISE_FAILED_DATA_TOO_LARGE";
                 break;
@@ -85,7 +73,8 @@ public class BertyAdvertise extends AdvertiseCallback {
             default: errorString = "UNKNOWN ADVERTISE FAILURE";
                 break;
         }
-        BertyUtils.logger("error", TAG, "onStartFailure advertising: " + errorString);
+
+        Logger.put("error", TAG, "onStartFailure advertising: " + errorString);
         super.onStartFailure(errorCode);
     }
 }

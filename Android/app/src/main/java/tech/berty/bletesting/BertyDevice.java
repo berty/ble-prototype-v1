@@ -1,12 +1,12 @@
 package tech.berty.bletesting;
 
+import android.os.Build;
 import android.annotation.TargetApi;
+
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
-import android.os.Build;
-import android.support.annotation.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
@@ -22,220 +22,277 @@ import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-public class BertyDevice {
+class BertyDevice {
+    private static final String TAG = "device";
+    private static final int DEFAULT_MTU = 23;
 
-    public static String TAG = "device";
+    private BluetoothGatt dGatt;
+    private BluetoothDevice dDevice;
+    private String dAddr;
+    private String dPeerID;
+    private String dMultiAddr;
+    private int dMtu;
 
-    public String addr;
-    public String peerID;
-    public String ma;
-    public int mtu;
-    public BluetoothGatt gatt;
-    public BluetoothDevice device;
-    public CountDownLatch latchRdy;
-    public CountDownLatch latchConn;
-    public CountDownLatch latchChar;
-    public CountDownLatch latchRead;
-    public Semaphore svcSema;
-    public Semaphore isWaiting;
-    public List<byte[]> toSend;
-    protected BluetoothGattService svc;
-    protected BluetoothGattCharacteristic maCharacteristic;
-    protected BluetoothGattCharacteristic peerIDCharacteristic;
-    protected BluetoothGattCharacteristic writerCharacteristic;
-    protected BluetoothGattCharacteristic closerCharacteristic;
+    private CountDownLatch latchConn = new CountDownLatch(1);
+    private CountDownLatch latchReady = new CountDownLatch(2);
+    private CountDownLatch latchChar = new CountDownLatch(4);
 
-    public BertyDevice(BluetoothDevice device, BluetoothGatt gatt, String address) {
-        this.gatt = gatt;
-        this.addr = address;
-        this.device = device;
-        this.isWaiting = new Semaphore(1);
-        this.svcSema = new Semaphore(0);
-        this.latchRdy = new CountDownLatch(2);
-        this.latchConn = new CountDownLatch(1);
-        this.latchChar = new CountDownLatch(4);
-        this.latchRead = new CountDownLatch(2);
-        this.toSend = new ArrayList<>();
-        this.mtu = 23;
-        waitRdy();
+    private Semaphore serviceSema = new Semaphore(0);
+    private Semaphore writeSema = new Semaphore(1);
+
+    private final List<byte[]> toSend = new ArrayList<>();
+
+    private BluetoothGattService dService;
+    private BluetoothGattCharacteristic maCharacteristic;
+    private BluetoothGattCharacteristic peerIDCharacteristic;
+    private BluetoothGattCharacteristic writerCharacteristic;
+//    private BluetoothGattCharacteristic closerCharacteristic;
+
+    BertyDevice(BluetoothDevice device) {
+        dAddr = device.getAddress();
+        dGatt = device.connectGatt(MainActivity.getContext(), false, BleManager.getGattCallback(), BluetoothDevice.TRANSPORT_LE);
+        dDevice = device;
+        dMtu = DEFAULT_MTU;
+
+        dGatt.connect();
+        waitReady();
         waitConn();
     }
 
-    public void waitRdy() {
+    void disconnect() {
+        dGatt.disconnect();
+        dGatt.close();
+    }
+
+
+    // Setters
+    void setMutliAddr(String mutliAddr) {
+        Logger.put("debug", TAG, "setMultiAddr() called for device: " + dDevice);
+        Logger.put("debug", TAG, "With current multiAddr: " + dMultiAddr + ", new multiAddr: " + mutliAddr);
+        dMultiAddr = mutliAddr;
+    }
+
+    void setPeerID(String peerID) {
+        Logger.put("debug", TAG, "setPeerID() called for device: " + dDevice);
+        Logger.put("debug", TAG, "With current peerID: " + dPeerID + ", new peerID: " + peerID);
+        dPeerID = peerID;
+    }
+
+    void setMtu(int mtu) {
+        Logger.put("debug", TAG, "setMtu() called for device: " + dDevice);
+        Logger.put("debug", TAG, "With current mtu: " + dMtu + ", new mtu: " + mtu);
+        dMtu = mtu;
+    }
+
+    void setService(BluetoothGattService service) {
+        Logger.put("debug", TAG, "setService() called for device: " + dDevice);
+        Logger.put("debug", TAG, "With current service: " + dService + ", new service: " + service);
+        dService = service;
+    }
+
+
+    // Getters
+    String getAddr() { return dAddr; }
+    String getMultiAddr() { return dMultiAddr; }
+    String getPeerID() { return dPeerID; }
+
+
+    // Semaphore and countdown related
+    void serviceSemaRelease() {
+        Logger.put("debug", TAG, "serviceSemaRelease() called for device: " + dDevice);
+        serviceSema.release();
+    }
+
+    void writeSemaRelease() {
+        Logger.put("debug", TAG, "writeSemaRelease() called for device: " + dDevice);
+        writeSema.release();
+    }
+
+    void latchConnCountDown() {
+        Logger.put("debug", TAG, "latchConnCountDown() called for device: " + dDevice);
+        Logger.put("debug", TAG, "With current count: " + latchConn.getCount() + ", new count: " + (latchConn.getCount() - 1));
+        latchConn.countDown();
+    }
+
+    void latchReadyCountDown() {
+        Logger.put("debug", TAG, "latchReadyCountDown() called for device: " + dDevice);
+        Logger.put("debug", TAG, "With current count: " + latchReady.getCount() + ", new count: " + (latchReady.getCount() - 1));
+        latchReady.countDown();
+    }
+
+
+    // Async handshake related
+    private void waitReady() {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Thread.currentThread().setName("LatchIsRdy");
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                    try {
-                        latchRdy.await();
-                    } catch (Exception e) {
-                        BertyUtils.logger("error", TAG, "waiting/writing failed: " + e.getMessage());
-                    }
+                Logger.put("debug", TAG, "waitReady() called for device: " + dDevice);
+                Thread.currentThread().setName("waitReady");
+                try {
+                    latchReady.await();
+                } catch (Exception e) {
+                    Logger.put("error", TAG, "Waiting/writing failed: " + e.getMessage());
                 }
             }
         }).start();
     }
 
-    public void waitConn() {
-        BertyUtils.logger("debug", TAG, "waitConn() called");
+    private void waitConn() {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                BertyUtils.logger("debug", TAG, "waitConn() 2 called");
-                Thread.currentThread().setName("WaitConn");
+                Logger.put("debug", TAG, "waitConn() called for device: " + dDevice);
+                Thread.currentThread().setName("waitConn");
                 try {
                     latchConn.await();
-                    while (!gatt.discoverServices()){
-                        BertyUtils.logger("debug", TAG, "waiting service discover");
+                    while (!dGatt.discoverServices()){
+                        Logger.put("debug", TAG, "Waiting for service discovery");
                         Thread.sleep(1000);
                     }
                     waitService();
                 } catch (Exception e) {
-                    BertyUtils.logger("error", TAG, "waiting/writing failed: " + e.getMessage());
+                    Logger.put("error", TAG, "Waiting/writing failed: " + e.getMessage());
                 }
 
             }
         }).start();
     }
 
-    public void waitService() {
-        BertyUtils.logger("debug", TAG, "waitService() called");
+    private void waitService() {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Thread.currentThread().setName("WaitService");
+                Logger.put("debug", TAG, "waitService() called for device: " + dDevice);
+                Thread.currentThread().setName("waitService");
                 try {
-                    svcSema.acquire();
+                    serviceSema.acquire();
                     waitChar();
                     populateCharacteristic();
                 } catch (Exception e) {
-                    BertyUtils.logger("error", TAG, "waiting/writing failed: " + e.getMessage());
+                    Logger.put("error", TAG, "Waiting/writing failed: " + e.getMessage());
                 }
 
             }
         }).start();
     }
 
-    public void waitChar() {
-        BertyUtils.logger("debug", TAG, "waitChar() called");
+    private void waitChar() {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Thread.currentThread().setName("WaitChar");
+                Logger.put("debug", TAG, "waitChar() called for device: " + dDevice);
+                Thread.currentThread().setName("waitChar");
                 try {
                     latchChar.await();
-                    waitWriteMaThenPeerID();
+                    waitWriteMultiAddrThenPeerID();
                 } catch (Exception e) {
-                    BertyUtils.logger("error", TAG, "waiting/writing failed: " + e.getMessage());
+                    Logger.put("error", TAG, "Waiting/writing failed: " + e.getMessage());
                 }
 
             }
         }).start();
     }
 
-    public void waitWriteMaThenPeerID() {
-        BertyUtils.logger("debug", TAG, "waitRead() called");
+    private void waitWriteMultiAddrThenPeerID() {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Thread.currentThread().setName("WaitChar");
+                Logger.put("debug", TAG, "waitWriteMaThenPeerID() called for device: " + dDevice);
+                Thread.currentThread().setName("waitWriteMaThenPeerID");
                 try {
                     synchronized (toSend) {
-                        gatt.requestMtu(555);
-                        byte[] value = Manager.getMultiAddr().getBytes(Charset.forName("UTF-8"));
+                        dGatt.requestMtu(555);
+                        byte[] value = BleManager.getMultiAddr().getBytes(Charset.forName("UTF-8"));
                         int length = value.length;
                         int offset = 0;
 
                         do {
-                            // You always need to detuct 3bytes from the mtu
-                            int chunckSize = length - offset > mtu - 3 ? mtu - 3 : length - offset;
+                            // You always need to deduct 3 bytes from the mtu
+                            int chunkSize = (length - offset > dMtu - 3) ? dMtu - 3 : length - offset;
                             ByteArrayOutputStream output = new ByteArrayOutputStream();
-                            output.write(Arrays.copyOfRange(value, offset, offset + chunckSize));
+                            output.write(Arrays.copyOfRange(value, offset, offset + chunkSize));
                             output.write(new byte[]{0});
-                            byte[] chunck = output.toByteArray();
-                            offset += chunckSize;
-                            toSend.add(chunck);
+                            byte[] chunk = output.toByteArray();
+                            offset += chunkSize;
+                            toSend.add(chunk);
                         } while (offset < length);
 
                         while (!toSend.isEmpty()) {
-                            BertyUtils.logger("debug", TAG, "MA");
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                                maCharacteristic.setValue(toSend.get(0));
-                                while (!gatt.writeCharacteristic(maCharacteristic)) {
-                                    /** intentionally empty */
-                                }
-                                isWaiting.acquire();
+                            Logger.put("debug", TAG, "Wait multiAddr writing");
+                            maCharacteristic.setValue(toSend.get(0));
+                            while (!dGatt.writeCharacteristic(maCharacteristic)) {
+                                Thread.sleep(1);
                             }
+                            writeSema.acquire();
                             toSend.remove(0);
                         }
 
-                        value = Manager.getPeerID().getBytes(Charset.forName("UTF-8"));
+                        value = BleManager.getPeerID().getBytes(Charset.forName("UTF-8"));
                         length = value.length;
                         offset = 0;
 
                         do {
-                            // You always need to detuct 3bytes from the mtu
-                            int chunckSize = length - offset > mtu - 3 ? mtu - 3 : length - offset;
+                            // You always need to deduct 3 bytes from the mtu
+                            int chunkSize = (length - offset > dMtu - 3) ? dMtu - 3 : length - offset;
                             ByteArrayOutputStream output = new ByteArrayOutputStream();
-                            output.write(Arrays.copyOfRange(value, offset, offset + chunckSize));
+                            output.write(Arrays.copyOfRange(value, offset, offset + chunkSize));
                             output.write(new byte[]{0});
-                            byte[] chunck = output.toByteArray();
-                            offset += chunckSize;
-                            toSend.add(chunck);
+                            byte[] chunk = output.toByteArray();
+                            offset += chunkSize;
+                            toSend.add(chunk);
                         } while (offset < length);
 
                         while (!toSend.isEmpty()) {
-                            BertyUtils.logger("debug", TAG, "PeerID");
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                                peerIDCharacteristic.setValue(toSend.get(0));
-                                while (!gatt.writeCharacteristic(peerIDCharacteristic)) {
-                                    /** intentionally empty */
-                                }
-                                isWaiting.acquire();
+                            Logger.put("debug", TAG, "Wait peerID writing");
+                            peerIDCharacteristic.setValue(toSend.get(0));
+                            while (!dGatt.writeCharacteristic(peerIDCharacteristic)) {
+                                Thread.sleep(1);
                             }
+                            writeSema.acquire();
                             toSend.remove(0);
                         }
-                        BertyUtils.logger("debug", TAG, "Countdown 1");
-                        latchRdy.countDown();
+                        Logger.put("debug", TAG, "Countdown 1");
+                        latchReady.countDown();
                     }
                 } catch (Exception e) {
-                    BertyUtils.logger("error", TAG, "Error waiting/writing " + e.getMessage());
+                    Logger.put("error", TAG, "Waiting/writing failed: " + e.getMessage());
                 }
             }
         }).start();
     }
 
 
-    public void populateCharacteristic() {
-        BertyUtils.logger("debug", TAG, "populateCharacteristic() called");
+    // Characteristic related
+    private void populateCharacteristic() {
+        Logger.put("debug", TAG, "populateCharacteristic() called for device: " + dDevice);
+
         ExecutorService es = Executors.newFixedThreadPool(4);
         List<PopulateCharacteristic> todo = new ArrayList<>(4);
 
-        todo.add(new PopulateCharacteristic(BertyUtils.MA_UUID));
-        todo.add(new PopulateCharacteristic(BertyUtils.PEER_ID_UUID));
-        todo.add(new PopulateCharacteristic(BertyUtils.CLOSER_UUID));
-        todo.add(new PopulateCharacteristic(BertyUtils.WRITER_UUID));
+        todo.add(new PopulateCharacteristic(BleManager.MA_UUID));
+        todo.add(new PopulateCharacteristic(BleManager.PEER_ID_UUID));
+        todo.add(new PopulateCharacteristic(BleManager.CLOSER_UUID));
+        todo.add(new PopulateCharacteristic(BleManager.WRITER_UUID));
 
         try {
             List<Future<BluetoothGattCharacteristic>> answers = es.invokeAll(todo);
             for (Future<BluetoothGattCharacteristic> future : answers) {
                 BluetoothGattCharacteristic c = future.get();
 
-                if (c != null && c.getUuid().equals(BertyUtils.MA_UUID)) {
+                if (c != null && c.getUuid().equals(BleManager.MA_UUID)) {
                     maCharacteristic = c;
                     latchChar.countDown();
-                } else if (c != null && c.getUuid().equals(BertyUtils.PEER_ID_UUID)) {
+                } else if (c != null && c.getUuid().equals(BleManager.PEER_ID_UUID)) {
                     peerIDCharacteristic = c;
                     latchChar.countDown();
-                } else if (c != null && c.getUuid().equals(BertyUtils.CLOSER_UUID)) {
-                    closerCharacteristic = c;
+                } else if (c != null && c.getUuid().equals(BleManager.CLOSER_UUID)) {
+//                    closerCharacteristic = c;
                     latchChar.countDown();
-                } else if (c != null && c.getUuid().equals(BertyUtils.WRITER_UUID)) {
+                } else if (c != null && c.getUuid().equals(BleManager.WRITER_UUID)) {
                     writerCharacteristic = c;
                     latchChar.countDown();
                 } else {
-                    BertyUtils.logger("error", TAG, "unknown characteristic retrieved");
+                    Logger.put("error", TAG, "Unknown characteristic retrieved: " + c);
                 }
             }
         } catch (Exception e) {
@@ -243,48 +300,44 @@ public class BertyDevice {
         }
     }
 
-    public void write(byte[] p) throws InterruptedException {
-        latchRdy.await();
-
-        synchronized (toSend) {
-            int length = p.length;
-            int offset = 0;
-
-            do {
-                // You always need to detuct 3bytes from the mtu
-                int chunckSize = length - offset > mtu - 3 ? mtu - 3 : length - offset;
-                byte[] chunck = Arrays.copyOfRange(p, offset, offset + chunckSize);
-                offset += chunckSize;
-                toSend.add(chunck);
-            } while (offset < length);
-
-            while (!toSend.isEmpty()) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                    writerCharacteristic.setValue(toSend.get(0));
-                    while (!gatt.writeCharacteristic(writerCharacteristic)) {
-                        /** intentionally empty */
-                    }
-                    isWaiting.acquire();
-                }
-                toSend.remove(0);
-            }
-        }
-    }
-
     private class PopulateCharacteristic implements Callable<BluetoothGattCharacteristic> {
         private UUID uuid;
 
-        public PopulateCharacteristic(UUID charactUUID) {
-            uuid = charactUUID;
+        private PopulateCharacteristic(UUID charaUUID) {
+            uuid = charaUUID;
         }
 
-        public @Nullable
-        BluetoothGattCharacteristic call() {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                return gatt.getService(BertyUtils.SERVICE_UUID).getCharacteristic(uuid);
-            }
+        public BluetoothGattCharacteristic call() {
+            return dGatt.getService(BleManager.SERVICE_UUID).getCharacteristic(uuid);
+        }
+    }
 
-            return null;
+
+    // Write related
+    void write(byte[] blob) throws InterruptedException {
+        Logger.put("debug", TAG, "write() called for device: " + dDevice);
+        latchReady.await();
+
+        synchronized (toSend) {
+            int length = blob.length;
+            int offset = 0;
+
+            do {
+                // You always need to deduct 3bytes from the mtu
+                int chunkSize = (length - offset > dMtu - 3) ? dMtu - 3 : length - offset;
+                byte[] chunk = Arrays.copyOfRange(blob, offset, offset + chunkSize);
+                offset += chunkSize;
+                toSend.add(chunk);
+            } while (offset < length);
+
+            while (!toSend.isEmpty()) {
+                writerCharacteristic.setValue(toSend.get(0));
+                while (!dGatt.writeCharacteristic(writerCharacteristic)) {
+                    Thread.sleep(1);
+                }
+                writeSema.acquire();
+                toSend.remove(0);
+            }
         }
     }
 }

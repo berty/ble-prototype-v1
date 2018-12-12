@@ -1,7 +1,10 @@
 package tech.berty.bletesting;
 
-import android.annotation.SuppressLint;
+import java.nio.charset.Charset;
+import java.util.UUID;
+import android.os.Build;
 import android.annotation.TargetApi;
+
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -10,50 +13,35 @@ import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
-import android.content.Context;
-import android.os.Build;
-
-import java.nio.charset.Charset;
-import java.util.UUID;
 
 import static android.bluetooth.BluetoothGatt.GATT_FAILURE;
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
-import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
+//import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
 import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTED;
 
-@SuppressLint("LongLogTag")
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-public class BertyGattServer extends BluetoothGattServerCallback {
+public class GattServer extends BluetoothGattServerCallback {
     private static final String TAG = "gatt_server";
 
-    private static BluetoothGattServer mBluetoothGattServer;
+    private BluetoothGattServer mBluetoothGattServer;
 
-    public BertyGattServer() {
-        super();
-        Thread.currentThread().setName("BertyGattServer");
-    }
+    GattServer() { super(); }
 
-    public static void setBluetoothGattServer(BluetoothGattServer bluetoothGattServer) {
+    void setBluetoothGattServer(BluetoothGattServer bluetoothGattServer) {
+        Logger.put("debug", TAG, "Bluetooth GATT Server set: " + bluetoothGattServer);
+
         mBluetoothGattServer = bluetoothGattServer;
     }
 
-    public static BluetoothGattServer getBluetoothGattServer() {
-        return mBluetoothGattServer;
-    }
-    
-    public void sendReadResponse(byte[] value, BluetoothDevice device, int offset, int requestId) {
-        BertyUtils.logger("debug", TAG, "sendReadResponse() called");
-        if (offset > value.length) {
-            mBluetoothGattServer.sendResponse(device, requestId, GATT_SUCCESS, 0, new byte[]{0} );
-            return;
+    void closeGattServer() {
+        Logger.put("debug", TAG, "closeGattServer() called");
+
+        if (mBluetoothGattServer != null) {
+            mBluetoothGattServer.close();
+            mBluetoothGattServer = null;
+        } else {
+            Logger.put("error", TAG, "Bluetooth GATT Server not set");
         }
-        int size = value.length - offset;
-        byte[] resp = new byte[size + 1];
-        for (int i = offset; i < value.length; i++) {
-            resp[i - offset] = value[i];
-            resp[i - offset + 1] = 0;
-        }
-        mBluetoothGattServer.sendResponse(device, requestId, GATT_SUCCESS, offset, resp);
     }
 
     /**
@@ -67,15 +55,16 @@ public class BertyGattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
-        BertyUtils.logger("debug", TAG, "onConnectionStateChange() called: device=" + device.getAddress() + " status=" + status + " newState=" + newState);
+        Logger.put("debug", TAG, "onConnectionStateChange() called");
+        Logger.put("debug", TAG, "With device: " + device + ", status: " + status + ", newState: " + newState);
 
-        BertyDevice bDevice = BertyUtils.getDeviceFromAddr(device.getAddress());
-        if (status == GATT_SUCCESS && newState == STATE_CONNECTED && bDevice == null) {
-//            bDevice.latchConn.countDown();
-            BertyUtils.addDevice(device, Manager.getContext(), Manager.getGattCallback());
-        } else if (newState == STATE_DISCONNECTED) {
-            if (bDevice != null) {
-                BertyUtils.removeDevice(bDevice);
+        BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(device.getAddress());
+//        if (status == GATT_SUCCESS && newState == STATE_CONNECTED && bertyDevice == null) {
+//            DeviceManager.addDeviceToIndex(new BertyDevice(device));
+//        } else if (newState == STATE_DISCONNECTED) {
+        if (newState == STATE_DISCONNECTED) {
+            if (bertyDevice != null) {
+                DeviceManager.removeDeviceFromIndex(bertyDevice);
             }
         }
         super.onConnectionStateChange(device, status, newState);
@@ -90,7 +79,8 @@ public class BertyGattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onServiceAdded(int status, BluetoothGattService service) {
-        BertyUtils.logger("debug", TAG, "sendServiceAdded() called");
+        Logger.put("debug", TAG, "sendServiceAdded() called");
+        Logger.put("debug", TAG, "With status: " + status + ", service: " + service);
         super.onServiceAdded(status, service);
     }
 
@@ -107,38 +97,9 @@ public class BertyGattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
-        BertyUtils.logger("debug", TAG, "onCharacteristicReadRequest() called: device=" + device.getAddress() + " requestId=" + requestId + " offset=" + offset + " characteristic=" + characteristic.getUuid());
-//        UUID charID = characteristic.getUuid();
-//        BertyDevice bDevice = BertyUtils.getDeviceFromAddr(device.getAddress());
-//        if (bDevice == null) {
-//            BluetoothGatt gatt = device.connectGatt(mContext, false, mGattCallback, BluetoothDevice.TRANSPORT_LE);
-//            BertyUtils.addDevice(device, gatt);
-//            bDevice = BertyUtils.getDeviceFromAddr(device.getAddress());
-//
-////            Log.e(TAG, "onCharacteristicReadRequest() device unknown");
-////            mBluetoothGattServer.sendResponse(device, requestId, GATT_REQUEST_NOT_SUPPORTED, offset, null);
-////            return;
-//        }
-//        if (charID.equals(MA_UUID)) {
-//            byte[] value = BertyUtils.maCharacteristic.getValue();
-//            Log.e(TAG, "Offset " + offset + " length " + value.length + " MTU " + bDevice.mtu);
-//            if (offset > value.length || (offset + bDevice.mtu - 3) > value.length) {
-//                Log.e(TAG, "OTHE DOWN1");
-//                bDevice.latchOtherRead.countDown();
-//            }
-//            sendReadResponse(value, device, offset, requestId);
-//        } else if (charID.equals(PEER_ID_UUID)) {
-//            byte[] value = BertyUtils.peerIDCharacteristic.getValue();
-//            Log.e(TAG, "Offset " + offset + " length " + value.length + " MTU " + bDevice.mtu);
-//            if (offset > value.length || (offset + bDevice.mtu - 3) > value.length) {
-//                Log.e(TAG, "OTHE DOWN");
-//                bDevice.latchOtherRead.countDown();
-//            }
-//            sendReadResponse(value, device, offset, requestId);
-//        } else {
-//            Log.e(TAG, "READ UNKNOW");
-//            mBluetoothGattServer.sendResponse(device, requestId, GATT_FAILURE, offset, null);
-//        }
+        Logger.put("debug", TAG, "onCharacteristicReadRequest() called");
+        Logger.put("debug", TAG, "With device: " + device + ", requestId: " + requestId + ", offset: " + offset + ", characteristic: " + characteristic);
+
         super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
     }
 
@@ -159,40 +120,41 @@ public class BertyGattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
+        Logger.put("debug", TAG, "onCharacteristicWriteRequest() called");
+        Logger.put("debug", TAG, "With device: " + device + ", requestId: " + requestId + ", characteristic: " + characteristic + ", preparedWrite: " + preparedWrite + ", responseNeeded: " + responseNeeded + ", offset: " + offset + ", len: " + value.length);
+
         super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
-        BertyUtils.logger("debug", TAG, "onCharacteristicWriteRequest() called");
+
         UUID charID = characteristic.getUuid();
-        BertyDevice bDevice = BertyUtils.getDeviceFromAddr(device.getAddress());
-        if (charID.equals(BertyUtils.WRITER_UUID)) {
-            BertyUtils.logger("debug", TAG, "rep needed: " + responseNeeded + "prepared: " + preparedWrite + " transid: " + requestId  + " offset: " + offset + " len: " + value.length);
+        BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(device.getAddress());
+        if (charID.equals(BleManager.WRITER_UUID)) {
+            if (ConnectActivity.getInstance() != null) {
+                ConnectActivity.getInstance().putMessage(value);
+            }
             if (responseNeeded) {
                 mBluetoothGattServer.sendResponse(device, requestId, GATT_SUCCESS, offset, value);
             }
-        } else if (charID.equals(BertyUtils.CLOSER_UUID)) {
-//            // TODO
-        } else if (charID.equals(BertyUtils.PEER_ID_UUID)) {
-            BertyUtils.logger("debug", TAG, "recv " + new String(value, Charset.forName("UTF-8")));
-            if (bDevice.peerID != null) {
-                bDevice.peerID += new String(value, Charset.forName("UTF-8"));
-            } else {
-                bDevice.peerID = new String(value, Charset.forName("UTF-8"));
+//        } else if (charID.equals(BleManager.CLOSER_UUID)) {
+//        // TODO
+        } else if (charID.equals(BleManager.PEER_ID_UUID)) {
+            if (bertyDevice != null && bertyDevice.getPeerID() != null) {
+                bertyDevice.setPeerID(bertyDevice.getPeerID() + new String(value, Charset.forName("UTF-8")));
+            } else if (bertyDevice != null) {
+                bertyDevice.setPeerID(new String(value, Charset.forName("UTF-8")));
             }
 
-            BertyUtils.logger("debug", TAG, "rep needed" + responseNeeded+ "prepared " + preparedWrite + " transid " + requestId  + " offset " + offset + " len: " + value.length);
             if (responseNeeded) {
                 mBluetoothGattServer.sendResponse(device, requestId, GATT_SUCCESS, offset, value);
             }
-            if (bDevice.peerID.length() == 46) {
-                BertyUtils.logger("debug", TAG, "Countdown");
-                bDevice.latchRdy.countDown();
+            if (bertyDevice != null && bertyDevice.getPeerID().length() == 46) {
+                Logger.put("debug", TAG, "Countdown");
+                bertyDevice.latchReadyCountDown();
             }
-        } else if(charID.equals(BertyUtils.MA_UUID)) {
-            BertyUtils.logger("debug", TAG, "recv " + new String(value, Charset.forName("UTF-8")));
-            BertyUtils.logger("debug", TAG,  "rep needed" + responseNeeded+ "prepared " + preparedWrite + " transid " + requestId  + " offset " + offset + " len: " + value.length);
-            if (bDevice.ma != null) {
-                bDevice.ma += new String(value, Charset.forName("UTF-8"));
-            } else {
-                bDevice.ma = new String(value, Charset.forName("UTF-8"));
+        } else if(charID.equals(BleManager.MA_UUID)) {
+            if (bertyDevice != null && bertyDevice.getMultiAddr() != null) {
+                bertyDevice.setMutliAddr(bertyDevice.getMultiAddr() + new String(value, Charset.forName("UTF-8")));
+            } else if (bertyDevice != null) {
+                bertyDevice.setMutliAddr(new String(value, Charset.forName("UTF-8")));
             }
 
             if (responseNeeded) {
@@ -217,6 +179,9 @@ public class BertyGattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onDescriptorReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattDescriptor descriptor) {
+        Logger.put("debug", TAG, "onDescriptorReadRequest() called");
+        Logger.put("debug", TAG, "With device: " + device + ", requestId: " + requestId + ", offset: " + offset + ", descriptor: " + descriptor);
+
         super.onDescriptorReadRequest(device, requestId, offset, descriptor);
     }
 
@@ -237,6 +202,9 @@ public class BertyGattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onDescriptorWriteRequest(BluetoothDevice device, int requestId, BluetoothGattDescriptor descriptor, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
+        Logger.put("debug", TAG, "onNotificationSent() called");
+        Logger.put("debug", TAG, "With device: " + device + ", requestId: " + requestId + ", descriptor: " + descriptor + ", preparedWrite: " + preparedWrite + ", responseNeeded: " + responseNeeded + ", offset: " + offset + ", len: " + value.length);
+
         super.onDescriptorWriteRequest(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value);
     }
 
@@ -252,6 +220,9 @@ public class BertyGattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onExecuteWrite(BluetoothDevice device, int requestId, boolean execute) {
+        Logger.put("debug", TAG, "onNotificationSent() called");
+        Logger.put("debug", TAG, "With device: " + device + ", requestId: " + requestId + ", execute: " + execute);
+
         super.onExecuteWrite(device, requestId, execute);
     }
 
@@ -268,8 +239,10 @@ public class BertyGattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onNotificationSent(BluetoothDevice device, int status) {
+        Logger.put("debug", TAG, "onNotificationSent() called");
+        Logger.put("debug", TAG, "With device: " + device + ", status: " + status);
+
         super.onNotificationSent(device, status);
-        BertyUtils.logger("debug", TAG, "onNotificationSent() called");
     }
 
     /**
@@ -283,10 +256,15 @@ public class BertyGattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onMtuChanged(BluetoothDevice device, int mtu) {
-        BertyUtils.logger("debug", TAG, "onMtuChanged() called");
+        Logger.put("debug", TAG, "onMtuChanged() called");
+        Logger.put("debug", TAG, "With device: " + device + ", mtu: " + mtu);
+
         super.onMtuChanged(device, mtu);
-        BertyDevice bertyDevice = BertyUtils.getDeviceFromAddr(device.getAddress());
-        bertyDevice.mtu = mtu;
+
+        BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(device.getAddress());
+        if (bertyDevice != null) {
+            bertyDevice.setMtu(mtu);
+        }
     }
 
     /**
@@ -303,7 +281,9 @@ public class BertyGattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onPhyUpdate(BluetoothDevice device, int txPhy, int rxPhy, int status) {
-        BertyUtils.logger("debug", TAG, "onPhyUpdate() called");
+        Logger.put("debug", TAG, "onPhyUpdate() called");
+        Logger.put("debug", TAG, "With device: " + device + ", txPhy: " + txPhy + ", rxPhy: " + rxPhy + ", status: " + status);
+
         super.onPhyUpdate(device, txPhy, rxPhy, status);
     }
 
@@ -320,7 +300,9 @@ public class BertyGattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onPhyRead(BluetoothDevice device, int txPhy, int rxPhy, int status) {
-        BertyUtils.logger("debug", TAG, "onPhyRead() called");
+        Logger.put("debug", TAG, "onPhyRead() called");
+        Logger.put("debug", TAG, "With device: " + device + ", txPhy: " + txPhy + ", rxPhy: " + rxPhy + ", status: " + status);
+
         super.onPhyRead(device, txPhy, rxPhy, status);
     }
 }
