@@ -44,8 +44,8 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onPhyUpdate(BluetoothGatt gatt, int txPhy, int rxPhy, int status) {
-        Logger.put("debug", TAG, "onPhyUpdate() called");
-        Logger.put("debug", TAG, "With gatt: " + gatt + ", txPhy: " + txPhy + ", rxPhy: " + rxPhy + ", status: " + status);
+//        Logger.put("debug", TAG, "onPhyUpdate() called");
+//        Logger.put("debug", TAG, "With gatt: " + gatt + ", txPhy: " + txPhy + ", rxPhy: " + rxPhy + ", status: " + status);
 
         super.onPhyUpdate(gatt, txPhy, rxPhy, status);
     }
@@ -63,8 +63,8 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onPhyRead(BluetoothGatt gatt, int txPhy, int rxPhy, int status) {
-        Logger.put("debug", TAG, "onPhyRead() called");
-        Logger.put("debug", TAG, "With gatt: " + gatt + ", txPhy: " + txPhy + ", rxPhy: " + rxPhy + ", status: " + status);
+//        Logger.put("debug", TAG, "onPhyRead() called");
+//        Logger.put("debug", TAG, "With gatt: " + gatt + ", txPhy: " + txPhy + ", rxPhy: " + rxPhy + ", status: " + status);
 
         super.onPhyRead(gatt, txPhy, rxPhy, status);
     }
@@ -82,8 +82,8 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-        Logger.put("debug", TAG, "onConnectionStateChange() called");
-        Logger.put("debug", TAG, "With gatt: " + gatt + ", status: " + status + ", newState: " + Logger.connectionStateToString(newState));
+//        Logger.put("debug", TAG, "onConnectionStateChange() called");
+//        Logger.put("debug", TAG, "With gatt: " + gatt + ", status: " + status + ", newState: " + Logger.connectionStateToString(newState));
 
         BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(gatt.getDevice().getAddress());
 
@@ -107,8 +107,8 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-        Logger.put("debug", TAG, "onServicesDiscovered() called");
-        Logger.put("debug", TAG, "With gatt: " + gatt + ", status: " + status);
+//        Logger.put("debug", TAG, "onServicesDiscovered() called");
+//        Logger.put("debug", TAG, "With gatt: " + gatt + ", status: " + status);
 
         BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(gatt.getDevice().getAddress());
 
@@ -140,8 +140,8 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-        Logger.put("debug", TAG, "onCharacteristicRead() called");
-        Logger.put("debug", TAG, "With gatt: " + gatt + ", characteristic: " + characteristic + ", status: " + status);
+//        Logger.put("debug", TAG, "onCharacteristicRead() called");
+//        Logger.put("debug", TAG, "With gatt: " + gatt + ", characteristic: " + characteristic + ", status: " + status);
 
         super.onCharacteristicRead(gatt, characteristic, status);
     }
@@ -163,8 +163,8 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-        Logger.put("debug", TAG, "onCharacteristicWrite() called");
-        Logger.put("debug", TAG, "With gatt: " + gatt + ", characteristic: " + characteristic + ", status: " + status);
+//        Logger.put("debug", TAG, "onCharacteristicWrite() called");
+//        Logger.put("debug", TAG, "With gatt: " + gatt + ", characteristic: " + characteristic + ", status: " + status);
 
         BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(gatt.getDevice().getAddress());
 
@@ -222,8 +222,8 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-        Logger.put("debug", TAG, "onCharacteristicChanged() called");
-        Logger.put("debug", TAG, "With gatt: " + gatt + ", characteristic: " + characteristic);
+//        Logger.put("debug", TAG, "onCharacteristicChanged() called");
+//        Logger.put("debug", TAG, "With gatt: " + gatt + ", characteristic: " + characteristic);
 
         super.onCharacteristicChanged(gatt, characteristic);
     }
@@ -238,8 +238,8 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-        Logger.put("debug", TAG, "onDescriptorRead() called");
-        Logger.put("debug", TAG, "With gatt: " + gatt + ", descriptor: " + descriptor + ", status: " + status);
+//        Logger.put("debug", TAG, "onDescriptorRead() called");
+//        Logger.put("debug", TAG, "With gatt: " + gatt + ", descriptor: " + descriptor + ", status: " + status);
 
         super.onDescriptorRead(gatt, descriptor, status);
     }
@@ -255,8 +255,8 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-        Logger.put("debug", TAG, "onDescriptorWrite() called");
-        Logger.put("debug", TAG, "With gatt: " + gatt + ", descriptor: " + descriptor + ", status: " + status);
+//        Logger.put("debug", TAG, "onDescriptorWrite() called");
+//        Logger.put("debug", TAG, "With gatt: " + gatt + ", descriptor: " + descriptor + ", status: " + status);
 
         super.onDescriptorWrite(gatt, descriptor, status);
     }
@@ -269,8 +269,8 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
-        Logger.put("debug", TAG, "onReliableWriteCompleted() called");
-        Logger.put("debug", TAG, "With gatt: " + gatt + ", status: " + status);
+//        Logger.put("debug", TAG, "onReliableWriteCompleted() called");
+//        Logger.put("debug", TAG, "With gatt: " + gatt + ", status: " + status);
 
         super.onReliableWriteCompleted(gatt, status);
     }
@@ -287,8 +287,8 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
-        Logger.put("debug", TAG, "onReadRemoteRssi() called");
-        Logger.put("debug", TAG, "With gatt: " + gatt + ", rssi: " + rssi + ", status: " + status);
+//        Logger.put("debug", TAG, "onReadRemoteRssi() called");
+//        Logger.put("debug", TAG, "With gatt: " + gatt + ", rssi: " + rssi + ", status: " + status);
 
         super.onReadRemoteRssi(gatt, rssi, status);
     }
@@ -306,8 +306,8 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
-        Logger.put("debug", TAG, "onMtuChanged() called");
-        Logger.put("debug", TAG, "With gatt: " + gatt + ", mtu: " + mtu + ", status: " + status);
+//        Logger.put("debug", TAG, "onMtuChanged() called");
+//        Logger.put("debug", TAG, "With gatt: " + gatt + ", mtu: " + mtu + ", status: " + status);
 
         BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(gatt.getDevice().getAddress());
 

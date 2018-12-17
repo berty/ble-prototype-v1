@@ -8,6 +8,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.EditText;
+import android.graphics.Color;
 
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothDevice;
@@ -29,11 +30,25 @@ public class ConnectActivity extends AppCompatActivity {
     private TextView addressTxt;
     private TextView multiAddrTxt;
     private TextView peerIDTxt;
+
+    private TextView gattClientTxt;
+    private TextView gattServerTxt;
+    private TextView gattClientState;
+    private TextView gattServerState;
+    private String connTxt = "\u2714";
+    private String disconnTxt = "\u2718";
+    private String connColor = "#009933";
+    private String disconnColor = "#CC0000";
+
     private Button connButton;
     private Button sendButton;
     private EditText dataInput;
     private ScrollView scroll;
     private LinearLayout table;
+
+    private Thread connectionWatcher;
+    private boolean gattClientConnected;
+    private boolean gattServerConnected;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +76,12 @@ public class ConnectActivity extends AppCompatActivity {
         addressTxt.setText("Address: " + address);
         multiAddrTxt = findViewById(R.id.textView2b);
         peerIDTxt = findViewById(R.id.textView3b);
+        gattClientTxt = findViewById(R.id.textView4b);
+        gattClientTxt.setText("GATT Client:");
+        gattClientState = findViewById(R.id.textView5b);
+        gattServerTxt = findViewById(R.id.textView6b);
+        gattServerTxt.setText("GATT Server:");
+        gattServerState = findViewById(R.id.textView7b);
         connButton = findViewById(R.id.button1b);
         sendButton = findViewById(R.id.button2b);
         sendButton.setText("Send data");
@@ -87,17 +108,17 @@ public class ConnectActivity extends AppCompatActivity {
         }
 
         // Set buttons in the right state depending if devices are connected or not
-        toggleButtons(isConnected());
+        toggleButtons();
 
         // Connect / disconnect on click on connButton (toggle)
         connButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if (isConnected()) {
+                if (gattClientConnected || gattServerConnected) {
                     bertyDevice.disconnect();
                 } else {
                     bertyDevice.connect();
                 }
-                toggleButtons(isConnected());
+                toggleButtons();
             }
         });
 
@@ -114,24 +135,37 @@ public class ConnectActivity extends AppCompatActivity {
                 }
             }
         });
+
+        startConnectionWatcher();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         AppData.setCurrContext(getApplicationContext());
+        if (connectionWatcher != null && !connectionWatcher.isAlive()) {
+            connectionWatcher.start();
+        } else {
+            startConnectionWatcher();
+        }
         instance = this;
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        if (connectionWatcher != null && connectionWatcher.isAlive()) {
+            connectionWatcher.stop();
+        }
         instance = this;
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (connectionWatcher != null && connectionWatcher.isAlive()) {
+            connectionWatcher.stop();
+        }
         instance = null;
     }
 
@@ -140,35 +174,71 @@ public class ConnectActivity extends AppCompatActivity {
     }
 
     // Method that check if devices are connected
-    private Boolean isConnected() {
-        BluetoothManager manager = (BluetoothManager)getApplicationContext().getSystemService(BLUETOOTH_SERVICE);
+    private void startConnectionWatcher() {
+        final BluetoothManager manager = (BluetoothManager)getApplicationContext().getSystemService(BLUETOOTH_SERVICE);
         if (manager == null) {
             Logger.put("error", TAG, "Can't get BLE Manager");
-            return false;
+            return;
         }
 
-        BluetoothDevice device = bertyDevice.getDevice();
+        final BluetoothDevice device = bertyDevice.getDevice();
         if (device == null) {
             Logger.put("error", TAG, "Can't get bluetooth device");
-            return false;
+            return;
         }
 
-        int gattClientState = manager.getConnectionState(device, GATT);
-        int gattServerState = manager.getConnectionState(device, GATT_SERVER);
+        connectionWatcher = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    int prevGattClientState = -1, prevGattServerState = -1;
 
-        Logger.put("debug", TAG, "Device " + device.toString());
-        Logger.put("debug", TAG, "GATT client connection state: " + Logger.connectionStateToString(gattClientState));
-        Logger.put("debug", TAG, "GATT server connection state: " + Logger.connectionStateToString(gattServerState));
+                    while (!connectionWatcher.isInterrupted()) {
+                        int gattClientState = manager.getConnectionState(device, GATT);
+                        int gattServerState = manager.getConnectionState(device, GATT_SERVER);
 
-        return (gattClientState == STATE_CONNECTED && gattServerState == STATE_CONNECTED);
+                        if (prevGattClientState != gattClientState || prevGattServerState != gattServerState) {
+                            Logger.put("debug", TAG, "Device " + device.toString());
+                            Logger.put("debug", TAG, "GATT client connection state: " + Logger.connectionStateToString(gattClientState));
+                            Logger.put("debug", TAG, "GATT server connection state: " + Logger.connectionStateToString(gattServerState));
+
+                            prevGattClientState = gattClientState;
+                            prevGattServerState = gattServerState;
+                        }
+
+                        gattClientConnected = gattClientState == STATE_CONNECTED;
+                        gattServerConnected = gattServerState == STATE_CONNECTED;
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                toggleButtons();
+                            }
+                        });
+
+                        Thread.sleep(250);
+                    }
+                } catch (Exception e) {
+                    Logger.put("error", TAG, "Failed in connectionWatcher: " + e.getMessage());
+                }
+            }
+        });
+
+        connectionWatcher.start();
     }
 
     // Method that disable / enable buttons and change text if connected
-    private void toggleButtons(Boolean connected) {
-        multiAddrTxt.setText((connected ? "MultiAddr: " + bertyDevice.getMultiAddr() : "MultiAddr: N/A"));
-        peerIDTxt.setText((connected ? "PeerID: " + bertyDevice.getPeerID() : "PeerID: N/A"));
-        connButton.setText(connected ? "Disconnect" : "Connect");
-        sendButton.setEnabled(connected);
+    private void toggleButtons() {
+        multiAddrTxt.setText((bertyDevice.getMultiAddr() != null ? "MultiAddr: " + bertyDevice.getMultiAddr() : "MultiAddr: N/A"));
+        peerIDTxt.setText((bertyDevice.getPeerID() != null ? "PeerID: " + bertyDevice.getPeerID() : "PeerID: N/A"));
+
+        gattClientState.setText(gattClientConnected ? connTxt : disconnTxt);
+        gattClientState.setTextColor(Color.parseColor( gattClientConnected ? connColor : disconnColor));
+        gattServerState.setText(gattServerConnected ? connTxt : disconnTxt);
+        gattServerState.setTextColor(Color.parseColor( gattServerConnected ? connColor : disconnColor));
+
+        connButton.setText(gattClientConnected && gattServerConnected ? "Disconnect" : "Connect");
+        sendButton.setEnabled(gattClientConnected && gattServerConnected);
     }
 
     // Methods that display sent / received messages

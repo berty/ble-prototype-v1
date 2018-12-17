@@ -54,8 +54,8 @@ public class GattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
-        Logger.put("debug", TAG, "onConnectionStateChange() called");
-        Logger.put("debug", TAG, "With device: " + device + ", status: " + status + ", newState: " + Logger.connectionStateToString(newState));
+//        Logger.put("debug", TAG, "onConnectionStateChange() called");
+//        Logger.put("debug", TAG, "With device: " + device + ", status: " + status + ", newState: " + Logger.connectionStateToString(newState));
 
         BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(device.getAddress());
         if (newState == STATE_DISCONNECTED) {
@@ -75,8 +75,8 @@ public class GattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onServiceAdded(int status, BluetoothGattService service) {
-        Logger.put("debug", TAG, "sendServiceAdded() called");
-        Logger.put("debug", TAG, "With status: " + status + ", service: " + service);
+//        Logger.put("debug", TAG, "sendServiceAdded() called");
+//        Logger.put("debug", TAG, "With status: " + status + ", service: " + service);
 
         super.onServiceAdded(status, service);
     }
@@ -94,8 +94,8 @@ public class GattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
-        Logger.put("debug", TAG, "onCharacteristicReadRequest() called");
-        Logger.put("debug", TAG, "With device: " + device + ", requestId: " + requestId + ", offset: " + offset + ", characteristic: " + characteristic);
+//        Logger.put("debug", TAG, "onCharacteristicReadRequest() called");
+//        Logger.put("debug", TAG, "With device: " + device + ", requestId: " + requestId + ", offset: " + offset + ", characteristic: " + characteristic);
 
         super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
     }
@@ -117,8 +117,8 @@ public class GattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
-        Logger.put("debug", TAG, "onCharacteristicWriteRequest() called");
-        Logger.put("debug", TAG, "With device: " + device + ", requestId: " + requestId + ", characteristic: " + characteristic + ", preparedWrite: " + preparedWrite + ", responseNeeded: " + responseNeeded + ", offset: " + offset + ", len: " + value.length);
+//        Logger.put("debug", TAG, "onCharacteristicWriteRequest() called");
+//        Logger.put("debug", TAG, "With device: " + device + ", requestId: " + requestId + ", characteristic: " + characteristic + ", preparedWrite: " + preparedWrite + ", responseNeeded: " + responseNeeded + ", offset: " + offset + ", len: " + value.length);
 
         super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
 
@@ -174,8 +174,8 @@ public class GattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onDescriptorReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattDescriptor descriptor) {
-        Logger.put("debug", TAG, "onDescriptorReadRequest() called");
-        Logger.put("debug", TAG, "With device: " + device + ", requestId: " + requestId + ", offset: " + offset + ", descriptor: " + descriptor);
+//        Logger.put("debug", TAG, "onDescriptorReadRequest() called");
+//        Logger.put("debug", TAG, "With device: " + device + ", requestId: " + requestId + ", offset: " + offset + ", descriptor: " + descriptor);
 
         super.onDescriptorReadRequest(device, requestId, offset, descriptor);
     }
@@ -197,8 +197,8 @@ public class GattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onDescriptorWriteRequest(BluetoothDevice device, int requestId, BluetoothGattDescriptor descriptor, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
-        Logger.put("debug", TAG, "onNotificationSent() called");
-        Logger.put("debug", TAG, "With device: " + device + ", requestId: " + requestId + ", descriptor: " + descriptor + ", preparedWrite: " + preparedWrite + ", responseNeeded: " + responseNeeded + ", offset: " + offset + ", len: " + value.length);
+//        Logger.put("debug", TAG, "onNotificationSent() called");
+//        Logger.put("debug", TAG, "With device: " + device + ", requestId: " + requestId + ", descriptor: " + descriptor + ", preparedWrite: " + preparedWrite + ", responseNeeded: " + responseNeeded + ", offset: " + offset + ", len: " + value.length);
 
         super.onDescriptorWriteRequest(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value);
     }
@@ -215,8 +215,8 @@ public class GattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onExecuteWrite(BluetoothDevice device, int requestId, boolean execute) {
-        Logger.put("debug", TAG, "onNotificationSent() called");
-        Logger.put("debug", TAG, "With device: " + device + ", requestId: " + requestId + ", execute: " + execute);
+//        Logger.put("debug", TAG, "onNotificationSent() called");
+//        Logger.put("debug", TAG, "With device: " + device + ", requestId: " + requestId + ", execute: " + execute);
 
         super.onExecuteWrite(device, requestId, execute);
     }
@@ -234,8 +234,8 @@ public class GattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onNotificationSent(BluetoothDevice device, int status) {
-        Logger.put("debug", TAG, "onNotificationSent() called");
-        Logger.put("debug", TAG, "With device: " + device + ", status: " + status);
+//        Logger.put("debug", TAG, "onNotificationSent() called");
+//        Logger.put("debug", TAG, "With device: " + device + ", status: " + status);
 
         super.onNotificationSent(device, status);
     }
@@ -251,8 +251,8 @@ public class GattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onMtuChanged(BluetoothDevice device, int mtu) {
-        Logger.put("debug", TAG, "onMtuChanged() called");
-        Logger.put("debug", TAG, "With device: " + device + ", mtu: " + mtu);
+//        Logger.put("debug", TAG, "onMtuChanged() called");
+//        Logger.put("debug", TAG, "With device: " + device + ", mtu: " + mtu);
 
         super.onMtuChanged(device, mtu);
 
@@ -276,8 +276,8 @@ public class GattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onPhyUpdate(BluetoothDevice device, int txPhy, int rxPhy, int status) {
-        Logger.put("debug", TAG, "onPhyUpdate() called");
-        Logger.put("debug", TAG, "With device: " + device + ", txPhy: " + txPhy + ", rxPhy: " + rxPhy + ", status: " + status);
+//        Logger.put("debug", TAG, "onPhyUpdate() called");
+//        Logger.put("debug", TAG, "With device: " + device + ", txPhy: " + txPhy + ", rxPhy: " + rxPhy + ", status: " + status);
 
         super.onPhyUpdate(device, txPhy, rxPhy, status);
     }
@@ -295,8 +295,8 @@ public class GattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onPhyRead(BluetoothDevice device, int txPhy, int rxPhy, int status) {
-        Logger.put("debug", TAG, "onPhyRead() called");
-        Logger.put("debug", TAG, "With device: " + device + ", txPhy: " + txPhy + ", rxPhy: " + rxPhy + ", status: " + status);
+//        Logger.put("debug", TAG, "onPhyRead() called");
+//        Logger.put("debug", TAG, "With device: " + device + ", txPhy: " + txPhy + ", rxPhy: " + rxPhy + ", status: " + status);
 
         super.onPhyRead(device, txPhy, rxPhy, status);
     }

@@ -48,8 +48,8 @@ public class Scanner extends ScanCallback {
      */
     @Override
     public void onScanResult(int callbackType, ScanResult result) {
-        Logger.put("debug", TAG, "onScanResult() called");
-        Logger.put("debug", TAG, "With callbackType: " + callbackType + ", result: " + result);
+//        Logger.put("debug", TAG, "onScanResult() called");
+//        Logger.put("debug", TAG, "With callbackType: " + callbackType + ", result: " + result);
 
         parseResult(result);
         super.onScanResult(callbackType, result);
@@ -62,8 +62,8 @@ public class Scanner extends ScanCallback {
      */
     @Override
     public void onBatchScanResults(List<ScanResult> results) {
-        Logger.put("debug", TAG, "onBatchScanResult() called");
-        Logger.put("debug", TAG, "With results: " + results);
+//        Logger.put("debug", TAG, "onBatchScanResult() called");
+//        Logger.put("debug", TAG, "With results: " + results);
 
         for (ScanResult result:results) {
             parseResult(result);
@@ -101,20 +101,20 @@ public class Scanner extends ScanCallback {
     }
 
     private static void parseResult(ScanResult result) {
-        Logger.put("debug", TAG, "parseResult() called with device: " + result.getDevice());
+//        Logger.put("debug", TAG, "parseResult() called with device: " + result.getDevice());
 
-        Context context = AppData.getCurrContext();
+//        Context context = AppData.getCurrContext();
         BluetoothDevice device = result.getDevice();
-        BluetoothManager bleManager = (BluetoothManager)context.getSystemService(BLUETOOTH_SERVICE);
+//        BluetoothManager bleManager = (BluetoothManager)context.getSystemService(BLUETOOTH_SERVICE);
 
-        if (bleManager != null) {
-            int gattClientState = bleManager.getConnectionState(device, GATT);
-            int gattServerState = bleManager.getConnectionState(device, GATT_SERVER);
-            Logger.put("debug", TAG, "GATT client connection state: " + Logger.connectionStateToString(gattClientState));
-            Logger.put("debug", TAG, "GATT server connection state: " + Logger.connectionStateToString(gattServerState));
-        } else {
-            Logger.put("error", TAG, "BLE Manager is null");
-        }
+//        if (bleManager != null) {
+//            int gattClientState = bleManager.getConnectionState(device, GATT);
+//            int gattServerState = bleManager.getConnectionState(device, GATT_SERVER);
+//            Logger.put("debug", TAG, "GATT client connection state: " + Logger.connectionStateToString(gattClientState));
+//            Logger.put("debug", TAG, "GATT server connection state: " + Logger.connectionStateToString(gattServerState));
+//        } else {
+//            Logger.put("error", TAG, "BLE Manager is null");
+//        }
 
         AppData.addDeviceToList(device.getAddress());
     }
