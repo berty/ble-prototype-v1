@@ -51,7 +51,7 @@ final class DeviceManager {
         return null;
     }
 
-    static BertyDevice getDeviceFromMultiAddr(String multiAddr) {
+    private static BertyDevice getDeviceFromMultiAddr(String multiAddr) {
         Logger.put("debug", TAG, "getDeviceFromMultiAddr() called with MultiAddr: " + multiAddr);
 
         synchronized (bertyDevices) {
@@ -76,7 +76,7 @@ final class DeviceManager {
         return write(blob, getDeviceFromMultiAddr(multiAddr));
     }
 
-    static boolean write(byte[] blob, BertyDevice bertyDevice) {
+    private static boolean write(byte[] blob, BertyDevice bertyDevice) {
         Logger.put("debug", TAG, "write() called");
         Logger.put("debug", TAG, "With len: " + blob.length + ", device: " + bertyDevice);
 

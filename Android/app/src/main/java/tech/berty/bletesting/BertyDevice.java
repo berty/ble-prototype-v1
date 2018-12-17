@@ -50,9 +50,13 @@ class BertyDevice {
 
     BertyDevice(BluetoothDevice device) {
         dAddr = device.getAddress();
-        dGatt = device.connectGatt(MainActivity.getContext(), false, BleManager.getGattCallback(), BluetoothDevice.TRANSPORT_LE);
+        dGatt = device.connectGatt(AppData.getCurrContext(), false, BleManager.getGattCallback(), BluetoothDevice.TRANSPORT_LE);
         dDevice = device;
         dMtu = DEFAULT_MTU;
+    }
+
+    void connect() {
+        Logger.put("debug", TAG, "connect() called for device: " + dDevice);
 
         dGatt.connect();
         waitReady();
@@ -60,16 +64,18 @@ class BertyDevice {
     }
 
     void disconnect() {
+        Logger.put("debug", TAG, "disconnect() called for device: " + dDevice);
+
         dGatt.disconnect();
         dGatt.close();
     }
 
 
     // Setters
-    void setMutliAddr(String mutliAddr) {
+    void setMultiAddr(String multiAddr) {
         Logger.put("debug", TAG, "setMultiAddr() called for device: " + dDevice);
-        Logger.put("debug", TAG, "With current multiAddr: " + dMultiAddr + ", new multiAddr: " + mutliAddr);
-        dMultiAddr = mutliAddr;
+        Logger.put("debug", TAG, "With current multiAddr: " + dMultiAddr + ", new multiAddr: " + multiAddr);
+        dMultiAddr = multiAddr;
     }
 
     void setPeerID(String peerID) {
@@ -92,6 +98,7 @@ class BertyDevice {
 
 
     // Getters
+    BluetoothDevice getDevice() { return dDevice; }
     String getAddr() { return dAddr; }
     String getMultiAddr() { return dMultiAddr; }
     String getPeerID() { return dPeerID; }
@@ -130,6 +137,7 @@ class BertyDevice {
                 Thread.currentThread().setName("waitReady");
                 try {
                     latchReady.await();
+                    Logger.put("debug", TAG, "Device " + dDevice + "is ready");
                 } catch (Exception e) {
                     Logger.put("error", TAG, "Waiting/writing failed: " + e.getMessage());
                 }

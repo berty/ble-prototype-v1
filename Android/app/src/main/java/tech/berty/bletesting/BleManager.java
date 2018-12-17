@@ -1,6 +1,7 @@
 package tech.berty.bletesting;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.ParcelUuid;
@@ -87,23 +88,23 @@ final class BleManager {
 
 
     // State related
-    private static boolean isBluetoothNotReady() {
+    static boolean isBluetoothNotReady() {
         if (!bluetoothReady) {
-            Logger.put("error", TAG, "Bluetooth Service not initialized yet");
+            Logger.put("debug", TAG, "Bluetooth Service not initialized yet");
         }
         return !bluetoothReady;
     }
 
-    private static boolean isNotAdvertising() {
+    static boolean isNotAdvertising() {
         if (!advertising) {
-            Logger.put("error", TAG, "Not currently advertising");
+            Logger.put("debug", TAG, "Not currently advertising");
         }
         return !advertising;
     }
 
-    private static boolean isNotScanning() {
+    static boolean isNotScanning() {
         if (!scanning) {
-            Logger.put("error", TAG, "Not currently scanning");
+            Logger.put("debug", TAG, "Not currently scanning");
         }
         return !scanning;
     }
@@ -112,6 +113,7 @@ final class BleManager {
     // Bluetooth service related
     static boolean initBluetoothService(Activity currentActivity) {
         Logger.put("debug", TAG, "initBluetoothService() called");
+        Context context = AppData.getCurrContext();
 
         // Turn on Bluetooth adapter
         if (!mBluetoothAdapter.isEnabled()) {
@@ -131,7 +133,7 @@ final class BleManager {
         }
 
         try {
-            BluetoothManager bleManager = (BluetoothManager)MainActivity.getContext().getSystemService(BLUETOOTH_SERVICE);
+            BluetoothManager bleManager = (BluetoothManager)context.getSystemService(BLUETOOTH_SERVICE);
             if (bleManager == null) {
                 Logger.put("error", TAG, "BLE Manager is null");
                 return false;
@@ -141,7 +143,7 @@ final class BleManager {
             BluetoothGattService bertyService = createService();
             Logger.put("debug", TAG, "Berty Service: " + bertyService);
 
-            BluetoothGattServer gattServer = bleManager.openGattServer(MainActivity.getContext(), mGattServerCallback);
+            BluetoothGattServer gattServer = bleManager.openGattServer(context, mGattServerCallback);
             gattServer.addService(bertyService);
             mGattServerCallback.setBluetoothGattServer(gattServer);
             Logger.put("debug", TAG, "GATT Server: " + gattServer);

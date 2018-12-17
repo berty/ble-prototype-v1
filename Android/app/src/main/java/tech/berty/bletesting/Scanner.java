@@ -1,5 +1,6 @@
 package tech.berty.bletesting;
 
+import android.content.Context;
 import android.os.Build;
 import android.annotation.TargetApi;
 
@@ -14,7 +15,6 @@ import android.bluetooth.BluetoothManager;
 import static android.bluetooth.BluetoothProfile.GATT;
 import static android.bluetooth.BluetoothProfile.GATT_SERVER;
 import static android.content.Context.BLUETOOTH_SERVICE;
-
 
 import java.util.List;
 
@@ -103,21 +103,19 @@ public class Scanner extends ScanCallback {
     private static void parseResult(ScanResult result) {
         Logger.put("debug", TAG, "parseResult() called with device: " + result.getDevice());
 
+        Context context = AppData.getCurrContext();
         BluetoothDevice device = result.getDevice();
-        BluetoothManager bleManager = (BluetoothManager)MainActivity.getContext().getSystemService(BLUETOOTH_SERVICE);
+        BluetoothManager bleManager = (BluetoothManager)context.getSystemService(BLUETOOTH_SERVICE);
 
         if (bleManager != null) {
-            Logger.put("debug", TAG, "Client connection state: " + bleManager.getConnectionState(device, GATT));
-            Logger.put("debug", TAG, "Server connection state: " + bleManager.getConnectionState(device, GATT_SERVER));
+            int gattClientState = bleManager.getConnectionState(device, GATT);
+            int gattServerState = bleManager.getConnectionState(device, GATT_SERVER);
+            Logger.put("debug", TAG, "GATT client connection state: " + Logger.connectionStateToString(gattClientState));
+            Logger.put("debug", TAG, "GATT server connection state: " + Logger.connectionStateToString(gattServerState));
         } else {
             Logger.put("error", TAG, "BLE Manager is null");
         }
 
-        MainActivity.getInstance().addDeviceToList(device.getAddress());
-//        BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(device.getAddress());
-//
-//        if (bertyDevice == null) {
-//            DeviceManager.addDeviceToIndex(new BertyDevice(device));
-//        }
+        AppData.addDeviceToList(device.getAddress());
     }
 }

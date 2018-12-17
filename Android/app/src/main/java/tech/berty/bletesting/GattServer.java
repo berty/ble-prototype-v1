@@ -16,7 +16,6 @@ import android.bluetooth.BluetoothProfile;
 
 import static android.bluetooth.BluetoothGatt.GATT_FAILURE;
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
-//import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
 import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTED;
 
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -56,12 +55,9 @@ public class GattServer extends BluetoothGattServerCallback {
     @Override
     public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
         Logger.put("debug", TAG, "onConnectionStateChange() called");
-        Logger.put("debug", TAG, "With device: " + device + ", status: " + status + ", newState: " + newState);
+        Logger.put("debug", TAG, "With device: " + device + ", status: " + status + ", newState: " + Logger.connectionStateToString(newState));
 
         BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(device.getAddress());
-//        if (status == GATT_SUCCESS && newState == STATE_CONNECTED && bertyDevice == null) {
-//            DeviceManager.addDeviceToIndex(new BertyDevice(device));
-//        } else if (newState == STATE_DISCONNECTED) {
         if (newState == STATE_DISCONNECTED) {
             if (bertyDevice != null) {
                 DeviceManager.removeDeviceFromIndex(bertyDevice);
@@ -81,6 +77,7 @@ public class GattServer extends BluetoothGattServerCallback {
     public void onServiceAdded(int status, BluetoothGattService service) {
         Logger.put("debug", TAG, "sendServiceAdded() called");
         Logger.put("debug", TAG, "With status: " + status + ", service: " + service);
+
         super.onServiceAdded(status, service);
     }
 
@@ -128,9 +125,7 @@ public class GattServer extends BluetoothGattServerCallback {
         UUID charID = characteristic.getUuid();
         BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(device.getAddress());
         if (charID.equals(BleManager.WRITER_UUID)) {
-            if (ConnectActivity.getInstance() != null) {
-                ConnectActivity.getInstance().putMessage(value);
-            }
+            AppData.addMessageToList(device.getAddress(), new String(value, Charset.forName("UTF-8")));
             if (responseNeeded) {
                 mBluetoothGattServer.sendResponse(device, requestId, GATT_SUCCESS, offset, value);
             }
@@ -152,9 +147,9 @@ public class GattServer extends BluetoothGattServerCallback {
             }
         } else if(charID.equals(BleManager.MA_UUID)) {
             if (bertyDevice != null && bertyDevice.getMultiAddr() != null) {
-                bertyDevice.setMutliAddr(bertyDevice.getMultiAddr() + new String(value, Charset.forName("UTF-8")));
+                bertyDevice.setMultiAddr(bertyDevice.getMultiAddr() + new String(value, Charset.forName("UTF-8")));
             } else if (bertyDevice != null) {
-                bertyDevice.setMutliAddr(new String(value, Charset.forName("UTF-8")));
+                bertyDevice.setMultiAddr(new String(value, Charset.forName("UTF-8")));
             }
 
             if (responseNeeded) {

@@ -12,7 +12,6 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="36dp"
         android:layout_marginTop="32dp"
-        android:text="Start BLE"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -22,7 +21,6 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="36dp"
         android:layout_marginTop="32dp"
-        android:text="Stop BLE"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -32,7 +30,6 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="36dp"
         android:layout_marginTop="28dp"
-        android:text="Advertising   \u25B6"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button1" />
 
@@ -42,7 +39,6 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="36dp"
         android:layout_marginTop="28dp"
-        android:text="Scanning   \u25B6"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button2" />
 
@@ -68,8 +64,8 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
-            android:orientation="vertical" >
-        </LinearLayout>
+            android:orientation="vertical" />
+
     </ScrollView>
 
 </android.support.constraint.ConstraintLayout>

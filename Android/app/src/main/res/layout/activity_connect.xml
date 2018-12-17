@@ -12,34 +12,56 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="36dp"
         android:layout_marginStart="36dp"
-        android:layout_marginTop="28dp"
-        android:text="Address"
-        android:textAlignment="center"
+        android:layout_marginTop="24dp"
         android:textColor="#0000FF"
-        android:textSize="25dp"
+        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView2b"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="36dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="12dp"
+        android:textColor="#C3C3C3"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView1b" />
+
+    <TextView
+        android:id="@+id/textView3b"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="36dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="12dp"
+        android:textColor="#C3C3C3"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView2b" />
 
     <Button
         android:id="@+id/button1b"
         android:layout_width="142dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="36dp"
-        android:layout_marginTop="30dp"
-        android:text="Connect"
+        android:layout_marginTop="16dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView1b" />
+        app:layout_constraintTop_toBottomOf="@+id/textView3b" />
 
     <Button
         android:id="@+id/button2b"
         android:layout_width="142dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="36dp"
-        android:layout_marginTop="30dp"
-        android:text="Send data"
+        android:layout_marginTop="16dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView1b" />
+        app:layout_constraintTop_toBottomOf="@+id/textView3b" />
 
 
     <EditText
@@ -48,11 +70,11 @@
         android:layout_height="42dp"
         android:layout_marginEnd="36dp"
         android:layout_marginStart="36dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="16dp"
         android:ems="10"
-        android:maxLength="20"
         android:inputType="textNoSuggestions"
-        android:hint="Bytes (less than or equal 20)"
+        android:maxLength="20"
+        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button1b" />
@@ -61,10 +83,10 @@
         android:id="@+id/scrollView1b"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginBottom="42dp"
+        android:layout_marginBottom="24dp"
         android:layout_marginEnd="42dp"
         android:layout_marginStart="42dp"
-        android:layout_marginTop="42dp"
+        android:layout_marginTop="16dp"
         android:background="@drawable/stroke_bg"
         android:fillViewport="true"
         android:scrollbarStyle="insideOverlay"
@@ -79,7 +101,8 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
-            android:orientation="vertical"></LinearLayout>
+            android:orientation="vertical" />
+
     </ScrollView>
 
 </android.support.constraint.ConstraintLayout>

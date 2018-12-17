@@ -2,6 +2,11 @@ package tech.berty.bletesting;
 
 import android.util.Log;
 
+import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTED;
+import static android.bluetooth.BluetoothProfile.STATE_CONNECTING;
+import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
+import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTING;
+
 class Logger {
 
     private Logger() {}
@@ -23,6 +28,21 @@ class Logger {
             default:
                 Log.e(tag, log);
                 break;
+        }
+    }
+
+    static String connectionStateToString(int state) {
+        switch (state) {
+            case STATE_DISCONNECTED:
+                return "disconnected";
+            case STATE_CONNECTING:
+                return "connecting";
+            case STATE_CONNECTED:
+                return "connected";
+            case STATE_DISCONNECTING:
+                return "disconnecting";
+            default:
+                return "unknown";
         }
     }
 }
