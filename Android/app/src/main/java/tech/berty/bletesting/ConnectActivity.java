@@ -113,7 +113,7 @@ public class ConnectActivity extends AppCompatActivity {
         // Connect / disconnect on click on connButton (toggle)
         connButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if (gattClientConnected || gattServerConnected) {
+                if (bertyDevice.isConnected()) {
                     bertyDevice.disconnect();
                 } else {
                     bertyDevice.connect();
@@ -141,32 +141,23 @@ public class ConnectActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        super.onResume();
-        AppData.setCurrContext(getApplicationContext());
-        if (connectionWatcher != null && !connectionWatcher.isAlive()) {
-            connectionWatcher.start();
-        } else {
-            startConnectionWatcher();
-        }
+        startConnectionWatcher();
         instance = this;
+        super.onResume();
     }
 
     @Override
     protected void onPause() {
+        connectionWatcher = null;
+        instance = null;
         super.onPause();
-        if (connectionWatcher != null && connectionWatcher.isAlive()) {
-            connectionWatcher.stop();
-        }
-        instance = this;
     }
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
-        if (connectionWatcher != null && connectionWatcher.isAlive()) {
-            connectionWatcher.stop();
-        }
+        connectionWatcher = null;
         instance = null;
+        super.onDestroy();
     }
 
     static ConnectActivity getInstance() {
@@ -237,8 +228,8 @@ public class ConnectActivity extends AppCompatActivity {
         gattServerState.setText(gattServerConnected ? connTxt : disconnTxt);
         gattServerState.setTextColor(Color.parseColor( gattServerConnected ? connColor : disconnColor));
 
-        connButton.setText(gattClientConnected && gattServerConnected ? "Disconnect" : "Connect");
-        sendButton.setEnabled(gattClientConnected && gattServerConnected);
+        connButton.setText(bertyDevice.isConnected() ? "Disconnect" : "Connect");
+        sendButton.setEnabled(bertyDevice.isConnected());
     }
 
     // Methods that display sent / received messages
@@ -249,7 +240,7 @@ public class ConnectActivity extends AppCompatActivity {
     }
 
     private void putMessage(String message) {
-        TextView text = new TextView(this);
+        final TextView text = new TextView(this);
         text.setText(message);
         text.setTextSize(20);
 
@@ -257,7 +248,12 @@ public class ConnectActivity extends AppCompatActivity {
         params.setMargins(0,0,0,10);
         text.setLayoutParams(params);
 
-        table.addView(text);
-        scroll.fullScroll(View.FOCUS_DOWN);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                table.addView(text);
+                scroll.fullScroll(View.FOCUS_DOWN);
+            }
+        });
     }
 }

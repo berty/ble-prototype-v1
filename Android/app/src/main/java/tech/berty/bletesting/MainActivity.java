@@ -28,6 +28,8 @@ public class MainActivity extends AppCompatActivity {
     private static String scanPlay = "Scanning   \u25B6";
     private static String scanStop = "Scanning   \u25A0";
 
+    private static Thread listRefresher;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         String multiAddr = "d5406e06-ad83-4622-a7af-38dbe8c4fabe";
@@ -103,25 +105,26 @@ public class MainActivity extends AppCompatActivity {
         });
 
         toggleButtons(!BleManager.isBluetoothNotReady());
+        startListRefresher();
     }
 
     @Override
     protected void onResume() {
-        super.onResume();
         AppData.setCurrContext(getApplicationContext());
         instance = this;
+        super.onResume();
     }
 
     @Override
     protected void onPause() {
-        super.onPause();
         instance = null;
+        super.onPause();
     }
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         instance = null;
+        super.onDestroy();
     }
 
     static MainActivity getInstance() {
@@ -140,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Method that disable clear device list
-    private void clearDeviceList() {
+    void clearDeviceList() {
         table.removeAllViews();
         AppData.clearDeviceList();
     }
@@ -167,4 +170,29 @@ public class MainActivity extends AppCompatActivity {
         });
         table.addView(text);
     }
-}
+
+    private void startListRefresher() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        AppData.waitUpdate.acquire();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                table.removeAllViews();
+                                for(String device: AppData.getDeviceList()) {
+                                    addDeviceToList(device);
+                                }
+                            }
+                        });
+                        Thread.sleep(840);
+                        AppData.waitUpdate.release();
+                        Thread.sleep(420);
+                    } catch (Exception e) {
+                    }
+                }
+            }
+        }).start();
+    }}

@@ -306,8 +306,8 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
-//        Logger.put("debug", TAG, "onMtuChanged() called");
-//        Logger.put("debug", TAG, "With gatt: " + gatt + ", mtu: " + mtu + ", status: " + status);
+        Logger.put("debug", TAG, "onMtuChanged() called");
+        Logger.put("debug", TAG, "With gatt: " + gatt + ", mtu: " + mtu + ", status: " + status);
 
         BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(gatt.getDevice().getAddress());
 

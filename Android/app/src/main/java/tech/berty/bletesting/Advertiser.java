@@ -70,7 +70,7 @@ public class Advertiser extends AdvertiseCallback {
             case ADVERTISE_FAILED_FEATURE_UNSUPPORTED: errorString = "ADVERTISE_FAILED_FEATURE_UNSUPPORTED";
                 break;
 
-            default: errorString = "UNKNOWN ADVERTISE FAILURE";
+            default: errorString = "UNKNOWN ADVERTISE FAILURE (" + errorCode + ")";
                 break;
         }
 

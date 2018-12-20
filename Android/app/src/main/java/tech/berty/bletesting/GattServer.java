@@ -54,8 +54,8 @@ public class GattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
-//        Logger.put("debug", TAG, "onConnectionStateChange() called");
-//        Logger.put("debug", TAG, "With device: " + device + ", status: " + status + ", newState: " + Logger.connectionStateToString(newState));
+        Logger.put("debug", TAG, "onConnectionStateChange() called");
+        Logger.put("debug", TAG, "With device: " + device + ", status: " + status + ", newState: " + Logger.connectionStateToString(newState));
 
         BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(device.getAddress());
         if (newState == STATE_DISCONNECTED) {
@@ -117,15 +117,15 @@ public class GattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
-//        Logger.put("debug", TAG, "onCharacteristicWriteRequest() called");
-//        Logger.put("debug", TAG, "With device: " + device + ", requestId: " + requestId + ", characteristic: " + characteristic + ", preparedWrite: " + preparedWrite + ", responseNeeded: " + responseNeeded + ", offset: " + offset + ", len: " + value.length);
+        Logger.put("debug", TAG, "onCharacteristicWriteRequest() called");
+        Logger.put("debug", TAG, "With device: " + device + ", requestId: " + requestId + ", characteristic: " + characteristic + ", preparedWrite: " + preparedWrite + ", responseNeeded: " + responseNeeded + ", offset: " + offset + ", value: " + new String(value, Charset.forName("UTF-8")) + ", len: " + value.length);
 
         super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
 
         UUID charID = characteristic.getUuid();
         BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(device.getAddress());
         if (charID.equals(BleManager.WRITER_UUID)) {
-            AppData.addMessageToList(device.getAddress(), new String(value, Charset.forName("UTF-8")));
+            AppData.addMessageToList(device.getAddress(), "received: " + new String(value, Charset.forName("UTF-8")));
             if (responseNeeded) {
                 mBluetoothGattServer.sendResponse(device, requestId, GATT_SUCCESS, offset, value);
             }
@@ -251,8 +251,8 @@ public class GattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onMtuChanged(BluetoothDevice device, int mtu) {
-//        Logger.put("debug", TAG, "onMtuChanged() called");
-//        Logger.put("debug", TAG, "With device: " + device + ", mtu: " + mtu);
+        Logger.put("debug", TAG, "onMtuChanged() called");
+        Logger.put("debug", TAG, "With device: " + device + ", mtu: " + mtu);
 
         super.onMtuChanged(device, mtu);
 
