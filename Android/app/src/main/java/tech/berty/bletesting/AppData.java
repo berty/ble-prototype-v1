@@ -25,6 +25,8 @@ final class AppData {
 
     static Context getCurrContext() { return currContext; }
 
+    // Get current connect activity
+
 
     // Device list related
     static void addDeviceToList(String address) {

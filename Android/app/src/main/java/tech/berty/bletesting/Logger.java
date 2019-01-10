@@ -13,6 +13,9 @@ class Logger {
 
     static void put(String level, String tag, String log) {
         switch (level) {
+            case "verbose":
+                Log.v(tag, log);
+                break;
             case "debug":
                 Log.d(tag, log);
                 break;

@@ -79,9 +79,11 @@ public class ConnectActivity extends AppCompatActivity {
         gattClientTxt = findViewById(R.id.textView4b);
         gattClientTxt.setText("GATT Client:");
         gattClientState = findViewById(R.id.textView5b);
+        gattClientState.setText("\u231B");
         gattServerTxt = findViewById(R.id.textView6b);
         gattServerTxt.setText("GATT Server:");
         gattServerState = findViewById(R.id.textView7b);
+        gattServerState.setText("\u231B");
         connButton = findViewById(R.id.button1b);
         sendButton = findViewById(R.id.button2b);
         sendButton.setText("Send data");
@@ -113,10 +115,20 @@ public class ConnectActivity extends AppCompatActivity {
         // Connect / disconnect on click on connButton (toggle)
         connButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if (bertyDevice.isConnected()) {
-                    bertyDevice.disconnect();
+                if (bertyDevice.isIdentified()) {
+                    bertyDevice.disconnectGatt();
                 } else {
-                    bertyDevice.connect();
+                    if (bertyDevice.lockConnAttemptTryAcquire("ConnectActivity", 0)) {
+                        if (bertyDevice.connectGatt(5)) {
+                            bertyDevice.lockConnAttemptRelease("ConnectActivity");
+                            if (bertyDevice.lockHandshakeAttemptTryAcquire("ConnectActivity", 0)) {
+                                bertyDevice.bertyHandshake();
+                                bertyDevice.lockHandshakeAttemptRelease("ConnectActivity");
+                            }
+                        } else {
+                            bertyDevice.lockConnAttemptRelease("ConnectActivity");
+                        }
+                    }
                 }
                 toggleButtons();
             }
@@ -166,18 +178,6 @@ public class ConnectActivity extends AppCompatActivity {
 
     // Method that check if devices are connected
     private void startConnectionWatcher() {
-        final BluetoothManager manager = (BluetoothManager)getApplicationContext().getSystemService(BLUETOOTH_SERVICE);
-        if (manager == null) {
-            Logger.put("error", TAG, "Can't get BLE Manager");
-            return;
-        }
-
-        final BluetoothDevice device = bertyDevice.getDevice();
-        if (device == null) {
-            Logger.put("error", TAG, "Can't get bluetooth device");
-            return;
-        }
-
         connectionWatcher = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -185,20 +185,19 @@ public class ConnectActivity extends AppCompatActivity {
                     int prevGattClientState = -1, prevGattServerState = -1;
 
                     while (!connectionWatcher.isInterrupted()) {
-                        int gattClientState = manager.getConnectionState(device, GATT);
-                        int gattServerState = manager.getConnectionState(device, GATT_SERVER);
+                        int gattClientState = bertyDevice.getGattClientState();
+                        int gattServerState = bertyDevice.getGattServerState();
 
                         if (prevGattClientState != gattClientState || prevGattServerState != gattServerState) {
-                            Logger.put("debug", TAG, "Device " + device.toString());
-                            Logger.put("debug", TAG, "GATT client connection state: " + Logger.connectionStateToString(gattClientState));
-                            Logger.put("debug", TAG, "GATT server connection state: " + Logger.connectionStateToString(gattServerState));
+                            Logger.put("verbose", TAG, "GATT client connection state: " + Logger.connectionStateToString(gattClientState));
+                            Logger.put("verbose", TAG, "GATT server connection state: " + Logger.connectionStateToString(gattServerState));
 
                             prevGattClientState = gattClientState;
                             prevGattServerState = gattServerState;
                         }
 
-                        gattClientConnected = gattClientState == STATE_CONNECTED;
-                        gattServerConnected = gattServerState == STATE_CONNECTED;
+                        gattClientConnected = (gattClientState == STATE_CONNECTED);
+                        gattServerConnected = (gattServerState == STATE_CONNECTED);
 
                         runOnUiThread(new Runnable() {
                             @Override
@@ -228,8 +227,8 @@ public class ConnectActivity extends AppCompatActivity {
         gattServerState.setText(gattServerConnected ? connTxt : disconnTxt);
         gattServerState.setTextColor(Color.parseColor( gattServerConnected ? connColor : disconnColor));
 
-        connButton.setText(bertyDevice.isConnected() ? "Disconnect" : "Connect");
-        sendButton.setEnabled(bertyDevice.isConnected());
+        connButton.setText(bertyDevice.isIdentified() && gattClientConnected && gattServerConnected ? "Disconnect" : "Connect");
+        sendButton.setEnabled(bertyDevice.isIdentified() && gattClientConnected && gattServerConnected);
     }
 
     // Methods that display sent / received messages

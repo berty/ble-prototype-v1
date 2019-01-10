@@ -40,7 +40,9 @@ public class Advertiser extends AdvertiseCallback {
      */
     @Override
     public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-        Logger.put("debug", TAG, "onStartSuccess advertising: " + settingsInEffect);
+        Logger.put("info", TAG, "Start advertising succeeded with settings: " + settingsInEffect);
+        BleManager.setAdvertisingState(true);
+
         super.onStartSuccess(settingsInEffect);
     }
 
@@ -53,15 +55,17 @@ public class Advertiser extends AdvertiseCallback {
     @Override
     public void onStartFailure(int errorCode) {
         String errorString;
+        boolean advertising = false;
 
         switch (errorCode) {
+            case ADVERTISE_FAILED_ALREADY_STARTED: errorString = "ADVERTISE_FAILED_ALREADY_STARTED";
+                advertising = true;
+                break;
+
             case ADVERTISE_FAILED_DATA_TOO_LARGE: errorString = "ADVERTISE_FAILED_DATA_TOO_LARGE";
                 break;
 
             case ADVERTISE_FAILED_TOO_MANY_ADVERTISERS: errorString = "ADVERTISE_FAILED_TOO_MANY_ADVERTISERS";
-                break;
-
-            case ADVERTISE_FAILED_ALREADY_STARTED: errorString = "ADVERTISE_FAILED_ALREADY_STARTED";
                 break;
 
             case ADVERTISE_FAILED_INTERNAL_ERROR: errorString = "ADVERTISE_FAILED_INTERNAL_ERROR";
@@ -73,8 +77,9 @@ public class Advertiser extends AdvertiseCallback {
             default: errorString = "UNKNOWN ADVERTISE FAILURE (" + errorCode + ")";
                 break;
         }
+        Logger.put("error", TAG, "Start advertising failed with error: " + errorString);
+        BleManager.setAdvertisingState(advertising);
 
-        Logger.put("error", TAG, "onStartFailure advertising: " + errorString);
         super.onStartFailure(errorCode);
     }
 }

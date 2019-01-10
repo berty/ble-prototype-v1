@@ -3,8 +3,10 @@
     <words>
       <w>addr</w>
       <w>connectable</w>
+      <w>infos</w>
       <w>rssi</w>
       <w>sema</w>
+      <w>timeouted</w>
     </words>
   </dictionary>
 </component>

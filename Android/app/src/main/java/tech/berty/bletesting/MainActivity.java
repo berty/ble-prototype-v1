@@ -16,19 +16,17 @@ public class MainActivity extends AppCompatActivity {
 
     private static MainActivity instance;
 
-    private Button startButton;
-    private Button stopButton;
-    private Button advButton;
-    private Button scanButton;
-    private LinearLayout table;
+    static Button startButton;
+    static Button stopButton;
+    static Button advButton;
+    static Button scanButton;
+    private static LinearLayout table;
 
-    private static String advPlay = "Advertising   \u25B6";
-    private static String advStop = "Advertising   \u25A0";
+    static String advPlay = "Advertising   \u25B6";
+    static String advStop = "Advertising   \u25A0";
 
-    private static String scanPlay = "Scanning   \u25B6";
-    private static String scanStop = "Scanning   \u25A0";
-
-    private static Thread listRefresher;
+    static String scanPlay = "Scanning   \u25B6";
+    static String scanStop = "Scanning   \u25A0";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,10 +81,10 @@ public class MainActivity extends AppCompatActivity {
         advButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (BleManager.isNotAdvertising() && BleManager.startAdvertising()) {
-                    advButton.setText(advStop);
-                } else if (BleManager.stopAdvertising()) {
-                    advButton.setText(advPlay);
+                if (BleManager.isAdvertising()) {
+                    BleManager.stopAdvertising();
+                } else {
+                    BleManager.startAdvertising();
                 }
             }
         });
@@ -95,16 +93,17 @@ public class MainActivity extends AppCompatActivity {
         scanButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (BleManager.isNotScanning() && BleManager.startScanning()) {
+                if (BleManager.isScanning()) {
+                    BleManager.stopScanning();
                     clearDeviceList();
-                    scanButton.setText(scanStop);
-                } else if (BleManager.stopScanning()) {
-                    scanButton.setText(scanPlay);
+                } else {
+                    BleManager.startScanning();
                 }
             }
         });
 
-        toggleButtons(!BleManager.isBluetoothNotReady());
+        toggleButtons(BleManager.isBluetoothReady());
+        BleManager.isBleAdvAndScanCompatible();
         startListRefresher();
     }
 
@@ -138,8 +137,8 @@ public class MainActivity extends AppCompatActivity {
         advButton.setEnabled(bleReady);
         scanButton.setEnabled(bleReady);
 
-        advButton.setText(BleManager.isNotAdvertising() ? advPlay : advStop);
-        scanButton.setText(BleManager.isNotScanning() ? scanPlay : scanStop);
+        advButton.setText(BleManager.isAdvertising() ? advStop : advPlay);
+        scanButton.setText(BleManager.isScanning() ? scanStop : scanPlay);
     }
 
     // Method that disable clear device list

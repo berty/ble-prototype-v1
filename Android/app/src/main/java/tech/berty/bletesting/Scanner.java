@@ -1,6 +1,5 @@
 package tech.berty.bletesting;
 
-import android.content.Context;
 import android.os.Build;
 import android.annotation.TargetApi;
 
@@ -10,11 +9,6 @@ import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
-
-import static android.bluetooth.BluetoothProfile.GATT;
-import static android.bluetooth.BluetoothProfile.GATT_SERVER;
-import static android.content.Context.BLUETOOTH_SERVICE;
 
 import java.util.List;
 
@@ -36,7 +30,6 @@ public class Scanner extends ScanCallback {
                 .build();
     }
 
-
     /**
      * Callback when a BLE advertisement has been found.
      *
@@ -48,8 +41,7 @@ public class Scanner extends ScanCallback {
      */
     @Override
     public void onScanResult(int callbackType, ScanResult result) {
-//        Logger.put("debug", TAG, "onScanResult() called");
-//        Logger.put("debug", TAG, "With callbackType: " + callbackType + ", result: " + result);
+        Logger.put("verbose", TAG, "onScanResult() called with callbackType: " + callbackType + ", result: " + result);
 
         parseResult(result);
         super.onScanResult(callbackType, result);
@@ -62,8 +54,7 @@ public class Scanner extends ScanCallback {
      */
     @Override
     public void onBatchScanResults(List<ScanResult> results) {
-//        Logger.put("debug", TAG, "onBatchScanResult() called");
-//        Logger.put("debug", TAG, "With results: " + results);
+        Logger.put("verbose", TAG, "onBatchScanResult() called with results: " + results);
 
         for (ScanResult result:results) {
             parseResult(result);
@@ -79,9 +70,11 @@ public class Scanner extends ScanCallback {
     @Override
     public void onScanFailed(int errorCode) {
         String errorString;
+        boolean scanning = false;
 
         switch(errorCode) {
             case SCAN_FAILED_ALREADY_STARTED: errorString = "SCAN_FAILED_ALREADY_STARTED";
+                scanning = true;
                 break;
 
             case SCAN_FAILED_APPLICATION_REGISTRATION_FAILED: errorString = "SCAN_FAILED_APPLICATION_REGISTRATION_FAILED";
@@ -93,29 +86,24 @@ public class Scanner extends ScanCallback {
             case SCAN_FAILED_FEATURE_UNSUPPORTED: errorString = "SCAN_FAILED_FEATURE_UNSUPPORTED";
                 break;
 
-            default: errorString = "UNKNOWN_FAILURE";
+            default: errorString = "UNKNOWN SCAN FAILURE (" + errorCode + ")";
                 break;
         }
-        Logger.put("error", TAG, "Scan failed: " + errorString);
+        Logger.put("error", TAG, "Start scanning failed with error: " + errorString);
+        BleManager.setScanningState(scanning);
+
         super.onScanFailed(errorCode);
     }
 
     private static void parseResult(ScanResult result) {
-//        Logger.put("debug", TAG, "parseResult() called with device: " + result.getDevice());
+        Logger.put("verbose", TAG, "parseResult() called with device: " + result.getDevice());
 
-//        Context context = AppData.getCurrContext();
+        if (!BleManager.isScanning()) {
+            Logger.put("info", TAG, "Start scanning succeeded");
+            BleManager.setScanningState(true);
+        }
+
         BluetoothDevice device = result.getDevice();
-//        BluetoothManager bleManager = (BluetoothManager)context.getSystemService(BLUETOOTH_SERVICE);
-
-//        if (bleManager != null) {
-//            int gattClientState = bleManager.getConnectionState(device, GATT);
-//            int gattServerState = bleManager.getConnectionState(device, GATT_SERVER);
-//            Logger.put("debug", TAG, "GATT client connection state: " + Logger.connectionStateToString(gattClientState));
-//            Logger.put("debug", TAG, "GATT server connection state: " + Logger.connectionStateToString(gattServerState));
-//        } else {
-//            Logger.put("error", TAG, "BLE Manager is null");
-//        }
-
         AppData.addDeviceToList(device.getAddress());
     }
 }

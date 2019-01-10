@@ -2,11 +2,12 @@ package tech.berty.bletesting;
 
 import android.os.Build;
 import android.annotation.TargetApi;
+import java.nio.charset.Charset;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 final class DeviceManager {
     private static final String TAG = "device_manager";
 
@@ -17,21 +18,27 @@ final class DeviceManager {
 
     // Index managing
     static void addDeviceToIndex(BertyDevice bertyDevice) {
-        Logger.put("debug", TAG, "addDeviceToIndex() called");
-        Logger.put("debug", TAG, "With device: " + bertyDevice + ", current index size: " + bertyDevices.size() + ", new index size: " + (bertyDevices.size() + 1));
+        Logger.put("debug", TAG, "addDeviceToIndex() called with device: " + bertyDevice + ", current index size: " + bertyDevices.size() + ", new index size: " + (bertyDevices.size() + 1));
 
         synchronized (bertyDevices) {
-            bertyDevices.put(bertyDevice.getAddr(), bertyDevice);
+            if (!bertyDevices.containsKey(bertyDevice.getAddr())) {
+                bertyDevices.put(bertyDevice.getAddr(), bertyDevice);
+            } else {
+                Logger.put("error", TAG, "Berty device already in index: " + bertyDevice.getAddr());
+            }
         }
     }
 
     static void removeDeviceFromIndex(BertyDevice bertyDevice) {
-        Logger.put("debug", TAG, "removeDeviceFromIndex() called");
-        Logger.put("debug", TAG, "With device: " + bertyDevice + ", current index size: " + bertyDevices.size() + ", new index size: " + (bertyDevices.size() - 1));
+        Logger.put("debug", TAG, "removeDeviceFromIndex() called with device: " + bertyDevice + ", current index size: " + bertyDevices.size() + ", new index size: " + (bertyDevices.size() - 1));
 
-        bertyDevice.disconnect();
+        bertyDevice.disconnectGatt();
         synchronized (bertyDevices) {
-            bertyDevices.remove(bertyDevice.getAddr());
+            if (bertyDevices.containsKey(bertyDevice.getAddr())) {
+                bertyDevices.remove(bertyDevice.getAddr());
+            } else {
+                Logger.put("error", TAG, "Berty device not found in index with address: " + bertyDevice.getAddr());
+            }
         }
     }
 
@@ -46,7 +53,7 @@ final class DeviceManager {
             }
         }
 
-        Logger.put("error", TAG, "Berty device not found with address: " + addr);
+        Logger.put("warn", TAG, "Berty device not found with address: " + addr);
 
         return null;
     }
@@ -77,11 +84,10 @@ final class DeviceManager {
     }
 
     private static boolean write(byte[] blob, BertyDevice bertyDevice) {
-        Logger.put("debug", TAG, "write() called");
-        Logger.put("debug", TAG, "With len: " + blob.length + ", device: " + bertyDevice);
+        Logger.put("debug", TAG, "write() called with blob: " + new String(blob, Charset.forName("UTF-8")) + ", len: " + blob.length + ", device: " + bertyDevice);
 
         if (bertyDevice == null) {
-            Logger.put("error", TAG, "Can't write: unknown device");
+            Logger.put("error", TAG, "write() failed: unknown device");
             return false;
         }
 
@@ -89,7 +95,7 @@ final class DeviceManager {
             bertyDevice.write(blob);
             return true;
         } catch (Exception e) {
-            Logger.put("error", TAG, "Can't write: " + e);
+            Logger.put("error", TAG, "write() failed: " + e.getMessage());
             return false;
         }
     }
