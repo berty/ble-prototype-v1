@@ -23,6 +23,8 @@ import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 import static android.bluetooth.BluetoothGatt.GATT_WRITE_NOT_PERMITTED;
 import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTED;
 import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTING;
+import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
+import static android.bluetooth.BluetoothProfile.STATE_CONNECTING;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class GattClient extends BluetoothGattCallback {
@@ -52,11 +54,28 @@ public class GattClient extends BluetoothGattCallback {
         if (bertyDevice != null && (newState == STATE_DISCONNECTED || newState == STATE_DISCONNECTING)) {
             if (bertyDevice.lockConnAttemptTryAcquire("onConnectionStateChange() client", 0)) {
                 Logger.put("warn", TAG, "onConnectionStateChange() client: disconnected/disconnecting, try to reconnect");
-                if (bertyDevice.connectGatt(5)) {
+                if (bertyDevice.connectGatt()) {
                     Logger.put("info", TAG, "onConnectionStateChange() client: reconnection succeeded with device: " + bertyDevice.getAddr());
+                    bertyDevice.lockConnAttemptRelease("onConnectionStateChange() client");
                 } else {
                     Logger.put("warn", TAG, "onConnectionStateChange() client: connection lost with device: " + bertyDevice.getAddr());
+                    bertyDevice.lockConnAttemptRelease("onConnectionStateChange() client");
                     DeviceManager.removeDeviceFromIndex(bertyDevice);
+                }
+            }
+        // New device is connecting/connected, try to connect back and start handshake
+        } else if ((bertyDevice == null || !bertyDevice.isIdentified()) && (newState == STATE_CONNECTED || newState == STATE_CONNECTING)) {
+            if (bertyDevice == null) {
+                Logger.put("info", TAG, "onConnectionStateChange() client: incoming connection succeeded with device: " + bertyDevice.getAddr());
+                bertyDevice = new BertyDevice(gatt.getDevice());
+                DeviceManager.addDeviceToIndex(bertyDevice);
+            }
+            if (bertyDevice.lockConnAttemptTryAcquire("onConnectionStateChange() client", 0)) {
+                if (bertyDevice.connectGatt()) {
+                    if (bertyDevice.lockHandshakeAttemptTryAcquire("onConnectionStateChange() client", 0)) {
+                        bertyDevice.bertyHandshake();
+                        bertyDevice.lockHandshakeAttemptRelease("onConnectionStateChange() client");
+                    }
                 }
                 bertyDevice.lockConnAttemptRelease("onConnectionStateChange() client");
             }

@@ -88,7 +88,7 @@ public class ConnectActivity extends AppCompatActivity {
         sendButton = findViewById(R.id.button2b);
         sendButton.setText("Send data");
         dataInput = findViewById(R.id.editText);
-        dataInput.setHint("Bytes (less than or equal 20)");
+//        dataInput.setHint("Bytes (less than or equal 20)");
         scroll = findViewById(R.id.scrollView1b);
         table = findViewById(R.id.linearLayout1b);
 
@@ -119,7 +119,7 @@ public class ConnectActivity extends AppCompatActivity {
                     bertyDevice.disconnectGatt();
                 } else {
                     if (bertyDevice.lockConnAttemptTryAcquire("ConnectActivity", 0)) {
-                        if (bertyDevice.connectGatt(5)) {
+                        if (bertyDevice.connectGatt()) {
                             bertyDevice.lockConnAttemptRelease("ConnectActivity");
                             if (bertyDevice.lockHandshakeAttemptTryAcquire("ConnectActivity", 0)) {
                                 bertyDevice.bertyHandshake();
@@ -241,7 +241,7 @@ public class ConnectActivity extends AppCompatActivity {
     private void putMessage(String message) {
         final TextView text = new TextView(this);
         text.setText(message);
-        text.setTextSize(20);
+//        text.setTextSize(20);
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         params.setMargins(0,0,0,10);

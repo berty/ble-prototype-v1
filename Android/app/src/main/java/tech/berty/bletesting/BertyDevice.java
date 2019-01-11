@@ -18,7 +18,6 @@ import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTED;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -35,20 +34,24 @@ class BertyDevice {
 
 
     // Timeout and maximum attempts for GATT connection
-    private static final int gattConnectAttemptTimeout = 420;
     private static final int gattConnectMaxAttempts = 10;
+    private static final int gattWaitConnectAttemptTimeout = 420;
+    private static final int gattWaitConnectMaxAttempts = 10;
     private static final int gattConnectingAttemptTimeout = 240;
     private static final int gattConnectingMaxAttempts = 5;
 
     // Timeout and maximum attempts for service discovery and check
+    private static final int deviceCheckTimeout = 30000;
     private static final int servDiscoveryAttemptTimeout = 1000;
     private static final int servDiscoveryMaxAttempts = 20;
     private static final int servCheckTimeout = 30000;
 
     // Timeout for remote device response
-    private static final int waitDeviceReadyTimeout = 110000;
+    private static final int waitDeviceReadyTimeout = 60000;
 
-    // Timeout for write operation
+    // Timeout and maximum attempts for write operation
+    private static final int initWriteAttemptTimeout = 40;
+    private static final int initWriteMaxAttempts = 1000;
     private static final int writeDoneTimeout = 60000;
 
     // GATT connection attributes
@@ -62,7 +65,7 @@ class BertyDevice {
     private BluetoothGattService bertyService;
     private BluetoothGattCharacteristic maCharacteristic;
     private BluetoothGattCharacteristic peerIDCharacteristic;
-    private BluetoothGattCharacteristic writerCharacteristic;
+    BluetoothGattCharacteristic writerCharacteristic;
 
 
     // Berty identification attributes
@@ -70,9 +73,11 @@ class BertyDevice {
     private String dMultiAddr;
     private boolean identified;
 
-
     // Semaphores / latch / buffer used for async connection / handshake / data exchange
-    private CountDownLatch handshakeDone = new CountDownLatch(4); // 2 for MA/PeerID received & 2 for MA/PeerID sent
+    private CountDownLatch infosExchanged = new CountDownLatch(4); // 2 for MA/PeerID received & 2 for MA/PeerID sent
+    private Semaphore handshakeDone = new Semaphore(0); // Lock until handshake succeeded or failed
+
+    private Semaphore waitDeviceCheck = new Semaphore(0); // Wait for thread that check device compliance
     private Semaphore waitServiceCheck = new Semaphore(0); // Lock for callback that check discovered services
     private Semaphore waitWriteDone = new Semaphore(1); // Lock for waiting completion of write operation
 
@@ -158,7 +163,6 @@ class BertyDevice {
         lockConnAttempt.release();
     }
 
-    // TODO: REMOVE IF USELESS
     boolean lockHandshakeAttemptTryAcquire(String caller, long timeout) {
         Logger.put("debug", TAG, "lockHandshakeAttemptTryAcquire() called from " + caller + " with timeout: " + timeout + " for device: " + dDevice);
 
@@ -182,6 +186,31 @@ class BertyDevice {
         Logger.put("debug", TAG, "lockHandshakeAttemptRelease() called from " + caller + " for device: " + dDevice);
 
         lockHandshakeAttempt.release();
+    }
+
+    boolean handshakeDoneTryAcquire(String caller, long timeout) {
+        Logger.put("debug", TAG, "handshakeDoneTryAcquire() called from " + caller + " with timeout: " + timeout + " for device: " + dDevice);
+
+        try {
+            boolean waited = handshakeDone.tryAcquire(timeout, TimeUnit.MILLISECONDS);
+
+            if (waited) {
+                Logger.put("debug", TAG, "handshakeDoneTryAcquire() acquired from " + caller + " for device: " + dDevice);
+            } else {
+                Logger.put("warn", TAG, "handshakeDoneTryAcquire() timeouted from " + caller + " for device: " + dDevice);
+            }
+
+            return waited;
+        } catch (Exception e) {
+            Logger.put("error", TAG, "handshakeDoneTryAcquire() from " + caller + " for device: " + dDevice + " failed: " + e.getMessage());
+            return false;
+        }
+    }
+
+    void handshakeDoneRelease(String caller) {
+        Logger.put("debug", TAG, "handshakeDoneRelease() called from " + caller + " for device: " + dDevice);
+
+        handshakeDone.release();
     }
 
     boolean waitServiceCheckTryAcquire(String caller, long timeout) throws InterruptedException {
@@ -229,32 +258,24 @@ class BertyDevice {
         waitWriteDone.release();
     }
 
-    boolean handshakeDoneAwait(String caller, long timeout) throws InterruptedException {
-        Logger.put("debug", TAG, "handshakeDoneAwait() called from " + caller + " with timeout: " + timeout + "for device: " + dDevice + " with current count: " + handshakeDone.getCount());
+    boolean infosExchangedAwait(String caller, long timeout) throws InterruptedException {
+        Logger.put("debug", TAG, "infosExchangedAwait() called from " + caller + " with timeout: " + timeout + " for device: " + dDevice + " with current count: " + infosExchanged.getCount());
 
-        boolean waited = handshakeDone.await(timeout, TimeUnit.MILLISECONDS);
+        boolean waited = infosExchanged.await(timeout, TimeUnit.MILLISECONDS);
 
         if (waited) {
-            Logger.put("debug", TAG, "handshakeDoneAwait() succeeded from " + caller + " for device: " + dDevice);
+            Logger.put("debug", TAG, "infosExchangedAwait() succeeded from " + caller + " for device: " + dDevice);
         } else {
-            Logger.put("warn", TAG, "handshakeDoneAwait() timeouted from " + caller + " for device: " + dDevice);
+            Logger.put("warn", TAG, "infosExchangedAwait() timeouted from " + caller + " for device: " + dDevice);
         }
 
         return waited;
     }
 
-    void handshakeDoneCountDown(String caller) {
-        Logger.put("debug", TAG, "handshakeDoneCountDown() called from " + caller + " for device: " + dDevice + " with current count: " + handshakeDone.getCount() + ", new count: " + (handshakeDone.getCount() - 1));
+    void infosExchangedCountDown(String caller) {
+        Logger.put("debug", TAG, "handshakeDoneCountDown() called from " + caller + " for device: " + dDevice + " with current count: " + infosExchanged.getCount() + ", new count: " + (infosExchanged.getCount() - 1));
 
-        handshakeDone.countDown();
-    }
-
-    void resetSemaAndLatch() {
-        Logger.put("debug", TAG, "resetSemaAndLatch() called for device: " + dDevice);
-
-        handshakeDone = new CountDownLatch(4);
-        waitServiceCheck = new Semaphore(0);
-        waitWriteDone = new Semaphore(1);
+        infosExchanged.countDown();
     }
 
 
@@ -267,19 +288,19 @@ class BertyDevice {
         }
     }
 
-    boolean connectGatt(int maxAttempts) {
+    boolean connectGatt() {
         Logger.put("debug", TAG, "connectGatt() called for device: " + dDevice);
 
         try {
             setGatt();
-            for (int attempt = 0; attempt < maxAttempts; attempt++) {
-                Logger.put("debug", TAG, "connectGatt() attempt: " + (attempt + 1) + "/" + maxAttempts + ", device:" + dDevice + ", client state: " + Logger.connectionStateToString(getGattClientState()) + ", server state: "  + Logger.connectionStateToString(getGattServerState()));
+            for (int attempt = 0; attempt < gattConnectMaxAttempts; attempt++) {
+                Logger.put("debug", TAG, "connectGatt() attempt: " + (attempt + 1) + "/" + gattConnectMaxAttempts + ", device:" + dDevice + ", client state: " + Logger.connectionStateToString(getGattClientState()) + ", server state: "  + Logger.connectionStateToString(getGattServerState()));
 
                 dGatt.connect();
 
-                for (int gattConnectAttempt = 0; gattConnectAttempt < gattConnectMaxAttempts; gattConnectAttempt++) {
-                    Logger.put("debug", TAG, "connectGatt() wait " + gattConnectAttemptTimeout + "ms (disconnected state) " + gattConnectAttempt + "/" + gattConnectMaxAttempts + " for device: " + dDevice);
-                    Thread.sleep(gattConnectAttemptTimeout);
+                for (int gattWaitConnectAttempt = 0; gattWaitConnectAttempt < gattWaitConnectMaxAttempts; gattWaitConnectAttempt++) {
+                    Logger.put("debug", TAG, "connectGatt() wait " + gattWaitConnectAttemptTimeout + "ms (disconnected state) " + gattWaitConnectAttempt + "/" + gattWaitConnectMaxAttempts + " for device: " + dDevice);
+                    Thread.sleep(gattWaitConnectAttemptTimeout);
 
                     if (getGattClientState() == STATE_CONNECTING || getGattServerState() == STATE_CONNECTING) {
                         for (int gattConnectingAttempt = 0; gattConnectingAttempt < gattConnectingMaxAttempts; gattConnectingAttempt++) {
@@ -358,51 +379,29 @@ class BertyDevice {
 
     // Check if remote device is Berty compliant and exchange libp2p infos
     // Wait (or timeout) until both devices are ready and infos are exchanged
-    boolean bertyHandshake() {
+    void bertyHandshake() {
         Logger.put("info", TAG, "bertyHandshake() called for device: " + dDevice);
 
-        try {
-            if (sendInfosToRemoteDevice()) {
-                identified = waitInfosFromRemoteDevice();
-            }
-            resetSemaAndLatch();
-
-            if (identified) {
-                Logger.put("info", TAG, "bertyHandshake() succeeded for device: " + dDevice);
-            } else {
-                Logger.put("error", TAG, "bertyHandshake() failed for device: " + dDevice);
-            }
-
-            return identified;
-        } catch (Exception e) {
-            Logger.put("error", TAG, "bertyHandshake() failed: " + e.getMessage());
-            resetSemaAndLatch();
-            return false;
+        if (checkBertyDeviceCompliance()) {
+            asyncInfosExchange();
         }
-    }
 
-    private boolean waitInfosFromRemoteDevice() {
-        Logger.put("debug", TAG, "waitInfosFromRemoteDevice() called for device: " + dDevice);
-
-        try {
-            boolean done = handshakeDoneAwait("waitInfosFromRemoteDevice()", waitDeviceReadyTimeout);
-
-            if (done) {
-                Logger.put("debug", TAG, "waitInfosFromRemoteDevice() succeeded before timeout");
-            } else {
-                Logger.put("error", TAG, "waitInfosFromRemoteDevice() failed after timeout");
+        // Auto remove device from index if asyncInfosExchange() failed
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    handshakeDone.acquire();
+                    if (identified) {
+                        handshakeDone.release();
+                    } else {
+                        DeviceManager.removeDeviceFromIndex(DeviceManager.getDeviceFromAddr(dAddr));
+                    }
+                } catch (Exception e) {
+                    Logger.put("error", TAG, "bertyHandshake() async exchange verification failed: " + e.getMessage());
+                }
             }
-            return done;
-        } catch (Exception e) {
-            Logger.put("error", TAG, "waitInfosFromRemoteDevice() failed: " + e.getMessage());
-            return false;
-        }
-    }
-
-    private boolean sendInfosToRemoteDevice() {
-        Logger.put("debug", TAG, "sendInfosToRemoteDevice() called for device: " + dDevice);
-
-        return (checkBertyDeviceCompliance() && writeMultiAddrAndPeerIDCharacteristics());
+        }).start();
     }
 
 
@@ -410,7 +409,39 @@ class BertyDevice {
     private boolean checkBertyDeviceCompliance() {
         Logger.put("debug", TAG, "checkBertyDeviceCompliance() called for device: " + dDevice);
 
-        return (checkBertyServiceCompliance() && checkBertyCharacteristicsCompliance());
+        Thread asyncCheck = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // Check if Berty service is found then check characteristics
+                    if (checkBertyServiceCompliance()) {
+                        checkBertyCharacteristicsCompliance();
+                    }
+                    waitDeviceCheck.release();
+                } catch (Exception e) {
+                    Logger.put("error", TAG, "checkBertyDeviceCompliance() failed: " + e.getMessage() + " for device: " + dDevice);
+                }
+            }
+        });
+
+        try {
+            asyncCheck.start();
+            if (waitDeviceCheck.tryAcquire(deviceCheckTimeout, TimeUnit.MILLISECONDS)) {
+                if (bertyService != null && maCharacteristic != null && peerIDCharacteristic != null && writerCharacteristic != null) {
+                    Logger.put("info", TAG, "checkBertyDeviceCompliance() succeeded for device: " + dDevice);
+                    return true;
+                } else {
+                    Logger.put("info", TAG, "checkBertyDeviceCompliance() failed for device: " + dDevice);
+                }
+            } else {
+                Logger.put("error", TAG, "checkBertyDeviceCompliance() timeouted for device: " + dDevice);
+                asyncCheck.interrupt();
+            }
+        } catch (Exception e) {
+            Logger.put("error", TAG, "checkBertyDeviceCompliance() failed: " + e.getMessage() + " for device: " + dDevice);
+        }
+
+        return false;
     }
 
     private boolean checkBertyServiceCompliance() {
@@ -427,18 +458,12 @@ class BertyDevice {
                     return false;
                 }
             }
-//TODO: REMOVE WHEN DEBUG DONE
-Logger.put("error", TAG, "dGatt.discoverServices(): " + dGatt.discoverServices());
             // Wait for services discovery completed and check that Berty service is found
             if (!waitServiceCheckTryAcquire("checkBertyServiceCompliance()", servCheckTimeout)) {
                 Logger.put("error", TAG, "checkBertyServiceCompliance() failed: services discovery completion timeouted for device: " + dDevice);
-//TODO: REMOVE WHEN DEBUG DONE
-Logger.put("error", TAG, "dGatt.discoverServices(): " + dGatt.discoverServices());
                 return false;
             }
 
-//TODO: REMOVE WHEN DEBUG DONE
-Logger.put("error", TAG, "dGatt.discoverServices(): " + dGatt.discoverServices());
             return (bertyService != null);
         } catch (Exception e) {
             Logger.put("error", TAG, "checkBertyServiceCompliance() failed: " + e.getMessage());
@@ -447,7 +472,7 @@ Logger.put("error", TAG, "dGatt.discoverServices(): " + dGatt.discoverServices()
 
     }
 
-    private boolean checkBertyCharacteristicsCompliance() {
+    private void checkBertyCharacteristicsCompliance() {
         Logger.put("debug", TAG, "checkBertyCharacteristicsCompliance() called for device: " + dDevice);
 
         class PopulateCharacteristic implements Callable<BluetoothGattCharacteristic> {
@@ -474,105 +499,114 @@ Logger.put("error", TAG, "dGatt.discoverServices(): " + dGatt.discoverServices()
         try {
             List<Future<BluetoothGattCharacteristic>> answers = es.invokeAll(todo);
             for (Future<BluetoothGattCharacteristic> future : answers) {
-                BluetoothGattCharacteristic c = future.get();
+                BluetoothGattCharacteristic characteristic = future.get();
 
-                if (c != null && c.getUuid().equals(BleManager.MA_UUID)) {
-                    Logger.put("debug", TAG, "checkBertyCharacteristicsCompliance() MultiAddr characteristic retrieved: " + c);
-                    maCharacteristic = c;
-                } else if (c != null && c.getUuid().equals(BleManager.PEER_ID_UUID)) {
-                    Logger.put("debug", TAG, "checkBertyCharacteristicsCompliance() PeerID characteristic retrieved: " + c);
-                    peerIDCharacteristic = c;
-                } else if (c != null && c.getUuid().equals(BleManager.WRITER_UUID)) {
-                    Logger.put("debug", TAG, "checkBertyCharacteristicsCompliance() Writer characteristic retrieved: " + c);
-                    writerCharacteristic = c;
+                if (characteristic != null && characteristic.getUuid().equals(BleManager.MA_UUID)) {
+                    Logger.put("debug", TAG, "checkBertyCharacteristicsCompliance() MultiAddr characteristic retrieved: " + characteristic + " for device: " + dDevice);
+                    maCharacteristic = characteristic;
+                } else if (characteristic != null && characteristic.getUuid().equals(BleManager.PEER_ID_UUID)) {
+                    Logger.put("debug", TAG, "checkBertyCharacteristicsCompliance() PeerID characteristic retrieved: " + characteristic + " for device: " + dDevice);
+                    peerIDCharacteristic = characteristic;
+                } else if (characteristic != null && characteristic.getUuid().equals(BleManager.WRITER_UUID)) {
+                    Logger.put("debug", TAG, "checkBertyCharacteristicsCompliance() Writer characteristic retrieved: " + characteristic + " for device: " + dDevice);
+                    writerCharacteristic = characteristic;
                 } else {
-                    Logger.put("error", TAG, "checkBertyCharacteristicsCompliance() unknown characteristic retrieved: " + c);
+                    Logger.put("error", TAG, "checkBertyCharacteristicsCompliance() unknown characteristic retrieved: " + characteristic + " for device: " + dDevice);
                 }
             }
-            return (maCharacteristic != null && peerIDCharacteristic != null && writerCharacteristic != null);
         } catch (Exception e) {
-            Logger.put("error", TAG, "populateCharacteristic() failed: " + e.getMessage());
-            return false;
+            Logger.put("error", TAG, "checkBertyCharacteristicsCompliance() failed: " + e.getMessage() + " for device: " + dDevice);
         }
     }
 
 
-    // Write own MultiAddress and PeerID on remote device
-    private boolean writeMultiAddrAndPeerIDCharacteristics() {
-        Logger.put("debug", TAG, "waitCharacteristic() called for device: " + dDevice);
+     // Async two-way exchange of MultiAddr and PeerID
+    private void asyncInfosExchange() {
+        Logger.put("debug", TAG, "asyncInfosExchange() called for device: " + dDevice);
 
-        return (writeOnCharacteristic(BleManager.getMultiAddr(), maCharacteristic) &&
-                writeOnCharacteristic(BleManager.getPeerID(), peerIDCharacteristic));
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (sendInfosToRemoteDevice()) { // Send MultiAddr and PeerID to remote device
+                    try {
+                        identified = infosExchangedAwait("asyncInfosExchange()", waitDeviceReadyTimeout);
+
+                        if (identified) {
+                            Logger.put("debug", TAG, "asyncInfosExchange() succeeded before timeout");
+                        } else {
+                            Logger.put("error", TAG, "asyncInfosExchange() failed after timeout");
+                        }
+                    } catch (Exception e) {
+                        Logger.put("error", TAG, "asyncInfosExchange() failed: " + e.getMessage());
+                    }
+                }
+
+                handshakeDone.release();
+            }
+        }).start();
     }
 
-    // Write a string on remote device characteristic
-    private boolean writeOnCharacteristic(final String value, final BluetoothGattCharacteristic characteristic) {
-        Logger.put("debug", TAG, "waitWriteCharacteristic() called for device: " + dDevice);
+    // Write own MultiAddress and PeerID on remote device
+    private boolean sendInfosToRemoteDevice() {
+        Logger.put("debug", TAG, "sendInfosToRemoteDevice() called for device: " + dDevice);
+
+        if (writeOnCharacteristic(BleManager.getMultiAddr().getBytes(Charset.forName("UTF-8")), maCharacteristic)) {
+            infosExchangedCountDown("sendInfosToRemoteDevice() MultiAddr");
+
+            if (writeOnCharacteristic(BleManager.getPeerID().getBytes(Charset.forName("UTF-8")), peerIDCharacteristic)) {
+                infosExchangedCountDown("writeMultiAddrAndPeerIDCharacteristics() PeerID");
+
+                Logger.put("info", TAG, "sendInfosToRemoteDevice() succeeded for device: " + dDevice);
+
+                return true;
+            }
+        }
+
+        Logger.put("info", TAG, "sendInfosToRemoteDevice() failed for device: " + dDevice);
+
+        return false;
+    }
+
+    // Write a blob on a specific remote device characteristic
+    boolean writeOnCharacteristic(byte[] blob, BluetoothGattCharacteristic characteristic) {
+        Logger.put("debug", TAG, "writeOnCharacteristic() called for device: " + dDevice);
 
         try {
             synchronized (toSend) {
-                int length = value.length();
+                String strBlob = new String(blob, Charset.forName("UTF-8"));
+                int length = strBlob.length();
                 int offset = 0;
 
                 do {
                     // BLE protocol reserves 3 bytes out of MTU_SIZE for metadata
                     // https://www.oreilly.com/library/view/getting-started-with/9781491900550/ch04.html#gatt_writes
                     int chunkSize = (length - offset > dMtu - 3) ? dMtu - 3 : length - offset;
-                    byte[] chunk = value.substring(offset, offset + chunkSize).getBytes(Charset.forName("UTF-8"));
+                    byte[] chunk = strBlob.substring(offset, offset + chunkSize).getBytes(Charset.forName("UTF-8"));
                     offset += chunkSize;
                     toSend.add(chunk);
                 } while (offset < length);
 
                 while (!toSend.isEmpty()) {
                     characteristic.setValue(toSend.get(0));
-                    while (!dGatt.writeCharacteristic(characteristic)) {
-                        Logger.put("verbose", TAG, "waitWriteCharacteristic() waiting for value writing on characteristic");
-                        Thread.sleep(10);
+                    for (int attempt = 0; !dGatt.writeCharacteristic(characteristic); attempt++) {
+                        if (attempt == initWriteMaxAttempts) {
+                            Logger.put("error", TAG, "writeOnCharacteristic() wait for write init timeouted for device:" + dDevice);
+                            return false;
+                        }
+
+                        Logger.put("verbose", TAG, "writeOnCharacteristic() wait for write init: " + (attempt + 1) + "/" + initWriteMaxAttempts + ", device:" + dDevice);
+                        Thread.sleep(initWriteAttemptTimeout);
                     }
-                    if (!waitWriteDoneTryAcquire("waitWriteCharacteristic()", writeDoneTimeout)) {
+                    if (!waitWriteDoneTryAcquire("writeOnCharacteristic()", writeDoneTimeout)) {
                         return false;
                     }
                     toSend.remove(0);
                 }
-                handshakeDoneCountDown("waitWriteCharacteristic()");
                 return true;
             }
         } catch (Exception e) {
-            Logger.put("error", TAG, "waitWriteCharacteristic() failed: " + e.getMessage());
+            Logger.put("error", TAG, "writeOnCharacteristic() failed: " + e.getMessage());
             return false;
-        }
-    }
-
-
-    // Write blob on remote device writerCharacteristic
-    void write(byte[] blob) throws InterruptedException {
-        Logger.put("debug", TAG, "write() called for device: " + dDevice);
-        if (!handshakeDoneAwait("write()", writeDoneTimeout)) {
-            throw new InterruptedException();
-        }
-
-        synchronized (toSend) {
-            int length = blob.length;
-            int offset = 0;
-
-            do {
-                // You always need to deduct 3bytes from the mtu
-                int chunkSize = (length - offset > dMtu - 3) ? dMtu - 3 : length - offset;
-                byte[] chunk = Arrays.copyOfRange(blob, offset, offset + chunkSize);
-                offset += chunkSize;
-                toSend.add(chunk);
-            } while (offset < length);
-
-            while (!toSend.isEmpty()) {
-                writerCharacteristic.setValue(toSend.get(0));
-                while (!dGatt.writeCharacteristic(writerCharacteristic)) {
-                    Thread.sleep(1);
-                }
-                if (!waitWriteDoneTryAcquire("write()", writeDoneTimeout)) {
-                    throw new InterruptedException();
-                }
-                toSend.remove(0);
-            }
         }
     }
 }

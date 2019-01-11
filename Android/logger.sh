@@ -49,14 +49,21 @@ else
 fi
 
 COMMAND="pidcat package $PACKAGE -s $CHOICE"
-
-for TAG in "${TAGS[@]}"; do
-	COMMAND="$COMMAND -t $TAG"
-done
+FILTERED=false
 
 for ARG; do
-	COMMAND="$COMMAND $ARG"
+	if [ "$ARG" == "--filtered" ]; then
+		FILTERED=true
+	else
+		COMMAND="$COMMAND $ARG"
+	fi
 done
+
+if [ $FILTERED == true ]; then
+	for TAG in "${TAGS[@]}"; do
+		COMMAND="$COMMAND -t $TAG"
+	done
+fi
 
 echo
 echo $COMMAND

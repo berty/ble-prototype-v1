@@ -11,6 +11,8 @@ import java.util.Map;
 final class DeviceManager {
     private static final String TAG = "device_manager";
 
+    private static final int handshakeDoneTimeout = 120000;
+
     private static final HashMap<String, BertyDevice> bertyDevices = new HashMap<>();
 
     private DeviceManager() {}
@@ -32,6 +34,7 @@ final class DeviceManager {
     static void removeDeviceFromIndex(BertyDevice bertyDevice) {
         Logger.put("debug", TAG, "removeDeviceFromIndex() called with device: " + bertyDevice + ", current index size: " + bertyDevices.size() + ", new index size: " + (bertyDevices.size() - 1));
 
+        bertyDevice.lockConnAttemptTryAcquire("removeDeviceFromIndex()", 180000);
         bertyDevice.disconnectGatt();
         synchronized (bertyDevices) {
             if (bertyDevices.containsKey(bertyDevice.getAddr())) {
@@ -40,6 +43,7 @@ final class DeviceManager {
                 Logger.put("error", TAG, "Berty device not found in index with address: " + bertyDevice.getAddr());
             }
         }
+        bertyDevice.lockConnAttemptRelease("removeDeviceFromIndex()");
     }
 
 
@@ -92,11 +96,20 @@ final class DeviceManager {
         }
 
         try {
-            bertyDevice.write(blob);
-            return true;
+            if (bertyDevice.handshakeDoneTryAcquire("write() DeviceManager", handshakeDoneTimeout)) {
+                bertyDevice.handshakeDoneRelease("write() DeviceManager");
+                if (bertyDevice.isIdentified()) {
+                    return bertyDevice.writeOnCharacteristic(blob, bertyDevice.writerCharacteristic);
+                } else {
+                    Logger.put("error", TAG, "write() failed: handshake failed");
+                }
+            } else {
+                Logger.put("error", TAG, "write() timeouted: handshake still not done");
+            }
         } catch (Exception e) {
             Logger.put("error", TAG, "write() failed: " + e.getMessage());
-            return false;
         }
+
+        return false;
     }
 }

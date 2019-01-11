@@ -65,26 +65,31 @@ public class GattServer extends BluetoothGattServerCallback {
         if (bertyDevice != null && (newState == STATE_DISCONNECTED || newState == STATE_DISCONNECTING)) {
             if (bertyDevice.lockConnAttemptTryAcquire("onConnectionStateChange() server", 0)) {
                 Logger.put("warn", TAG, "onConnectionStateChange() server: disconnected/disconnecting, try to reconnect");
-                if (bertyDevice.connectGatt(5)) {
+                if (bertyDevice.connectGatt()) {
                     Logger.put("info", TAG, "onConnectionStateChange() server: reconnection succeeded with device: " + bertyDevice.getAddr());
+                    bertyDevice.lockConnAttemptRelease("onConnectionStateChange() server");
                 } else {
                     Logger.put("warn", TAG, "onConnectionStateChange() server: connection lost with device: " + bertyDevice.getAddr());
+                    bertyDevice.lockConnAttemptRelease("onConnectionStateChange() server");
                     DeviceManager.removeDeviceFromIndex(bertyDevice);
+                }
+            }
+        // New device is connecting/connected, try to connect back and start handshake
+        } else if ((bertyDevice == null || !bertyDevice.isIdentified()) && (newState == STATE_CONNECTED || newState == STATE_CONNECTING)) {
+            if (bertyDevice == null) {
+                Logger.put("info", TAG, "onConnectionStateChange() server: incoming connection succeeded with device: " + bertyDevice.getAddr());
+                bertyDevice = new BertyDevice(device);
+                DeviceManager.addDeviceToIndex(bertyDevice);
+            }
+            if (bertyDevice.lockConnAttemptTryAcquire("onConnectionStateChange() server", 0)) {
+                if (bertyDevice.connectGatt()) {
+                    if (bertyDevice.lockHandshakeAttemptTryAcquire("onConnectionStateChange() server", 0)) {
+                        bertyDevice.bertyHandshake();
+                        bertyDevice.lockHandshakeAttemptRelease("onConnectionStateChange() server");
+                    }
                 }
                 bertyDevice.lockConnAttemptRelease("onConnectionStateChange() server");
             }
-           // TODO: REMOVE IF USELESS
-//        } else if ((bertyDevice == null || !bertyDevice.isIdentified()) && (newState == STATE_CONNECTED || newState == STATE_CONNECTING)) {
-//            if (bertyDevice == null) {
-//                Logger.put("info", TAG, "onConnectionStateChange() server: incoming connection succeeded with device: " + bertyDevice.getAddr());
-//                bertyDevice = new BertyDevice(device);
-//                DeviceManager.addDeviceToIndex(bertyDevice);
-//            }
-//            bertyDevice.setGatt();
-//            if (bertyDevice.lockHandshakeAttemptTryAcquire("onConnectionStateChange() server", 0)) {
-//                bertyDevice.bertyHandshake();
-//                bertyDevice.lockHandshakeAttemptRelease("onConnectionStateChange() server");
-//            }
         }
 
         super.onConnectionStateChange(device, status, newState);
@@ -136,7 +141,7 @@ public class GattServer extends BluetoothGattServerCallback {
                 mBluetoothGattServer.sendResponse(device, requestId, GATT_SUCCESS, offset, value);
             }
             if (bertyDevice.getPeerID().length() == 46) {
-                bertyDevice.handshakeDoneCountDown("onCharacteristicWriteRequest()");
+                bertyDevice.infosExchangedCountDown("onCharacteristicWriteRequest() PeerID");
             }
         } else if (charID.equals(BleManager.MA_UUID)) {
             if (bertyDevice.getMultiAddr() != null) {
@@ -149,7 +154,7 @@ public class GattServer extends BluetoothGattServerCallback {
                 mBluetoothGattServer.sendResponse(device, requestId, GATT_SUCCESS, offset, value);
             }
             if (bertyDevice.getMultiAddr().length() == 36) {
-                bertyDevice.handshakeDoneCountDown("onCharacteristicWriteRequest()");
+                bertyDevice.infosExchangedCountDown("onCharacteristicWriteRequest() MultiAddr");
             }
         }
         else {
@@ -187,7 +192,7 @@ public class GattServer extends BluetoothGattServerCallback {
      */
     @Override
     public void onServiceAdded(int status, BluetoothGattService service) {
-        Logger.put("verbose", TAG, "sendServiceAdded() called with status: " + status + ", service: " + service);
+        Logger.put("debug", TAG, "sendServiceAdded() called with status: " + status + ", service: " + service);
 
         super.onServiceAdded(status, service);
     }
