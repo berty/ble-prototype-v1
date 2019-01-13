@@ -46,40 +46,18 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-        Logger.put("debug", TAG, "onConnectionStateChange() client called with gatt: " + gatt + ", status: " + status + ", newState: " + Logger.connectionStateToString(newState));
+        Log.d(TAG, "onConnectionStateChange() client called with gatt: " + gatt + ", status: " + status + ", newState: " + Helper.connectionStateToString(newState));
 
-        BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(gatt.getDevice().getAddress());
+        BluetoothDevice device = gatt.getDevice();
+        BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(device.getAddress());
 
-        // Device connected before is disconnecting/disconnected, try to reconnect
-        if (bertyDevice != null && (newState == STATE_DISCONNECTED || newState == STATE_DISCONNECTING)) {
-            if (bertyDevice.lockConnAttemptTryAcquire("onConnectionStateChange() client", 0)) {
-                Logger.put("warn", TAG, "onConnectionStateChange() client: disconnected/disconnecting, try to reconnect");
-                if (bertyDevice.connectGatt()) {
-                    Logger.put("info", TAG, "onConnectionStateChange() client: reconnection succeeded with device: " + bertyDevice.getAddr());
-                    bertyDevice.lockConnAttemptRelease("onConnectionStateChange() client");
-                } else {
-                    Logger.put("warn", TAG, "onConnectionStateChange() client: connection lost with device: " + bertyDevice.getAddr());
-                    bertyDevice.lockConnAttemptRelease("onConnectionStateChange() client");
-                    DeviceManager.removeDeviceFromIndex(bertyDevice);
-                }
-            }
-        // New device is connecting/connected, try to connect back and start handshake
-        } else if ((bertyDevice == null || !bertyDevice.isIdentified()) && (newState == STATE_CONNECTED || newState == STATE_CONNECTING)) {
-            if (bertyDevice == null) {
-                Logger.put("info", TAG, "onConnectionStateChange() client: incoming connection succeeded with device: " + bertyDevice.getAddr());
-                bertyDevice = new BertyDevice(gatt.getDevice());
-                DeviceManager.addDeviceToIndex(bertyDevice);
-            }
-            if (bertyDevice.lockConnAttemptTryAcquire("onConnectionStateChange() client", 0)) {
-                if (bertyDevice.connectGatt()) {
-                    if (bertyDevice.lockHandshakeAttemptTryAcquire("onConnectionStateChange() client", 0)) {
-                        bertyDevice.bertyHandshake();
-                        bertyDevice.lockHandshakeAttemptRelease("onConnectionStateChange() client");
-                    }
-                }
-                bertyDevice.lockConnAttemptRelease("onConnectionStateChange() client");
-            }
+        if (bertyDevice == null) {
+            Log.i(TAG, "onConnectionStateChange() client: incoming connection from device: " + bertyDevice.getAddr());
+            bertyDevice = new BertyDevice(device);
+            DeviceManager.addDeviceToIndex(bertyDevice);
         }
+
+        bertyDevice.asyncConnectionToDevice(); // Everything is handled in this method: GATT connection/reconnection and handshake if necessary
 
         super.onConnectionStateChange(gatt, status, newState);
     }
@@ -93,25 +71,19 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-        Logger.put("debug", TAG, "onServicesDiscovered() called with gatt: " + gatt + ", status: " + status);
+        Log.d(TAG, "onServicesDiscovered() called with gatt: " + gatt + ", status: " + status);
 
         BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(gatt.getDevice().getAddress());
 
-        for (BluetoothGattService service : gatt.getServices()) {
-            if (service.getUuid().equals(BleManager.SERVICE_UUID)) {
-                if (bertyDevice != null) {
-                    Logger.put("info", TAG, "Berty BLE service found on device: " + bertyDevice.getAddr());
+        if (bertyDevice != null) {
+            for (BluetoothGattService service : gatt.getServices()) {
+                if (service.getUuid().equals(BleManager.SERVICE_UUID)) {
+                    Log.d(TAG, "onServicesDiscovered() Berty service found on device: " + bertyDevice.getAddr());
                     bertyDevice.setBertyService(service);
-                    bertyDevice.waitServiceCheckRelease("onServicesDiscovered()");
                     break;
                 }
             }
-        }
-
-        if (bertyDevice != null && bertyDevice.getBertyService() == null) {
-            Logger.put("info", TAG, "Berty BLE service not found on device: " + bertyDevice.getAddr());
-            bertyDevice.waitServiceCheckRelease("onServicesDiscovered()");
-            DeviceManager.removeDeviceFromIndex(bertyDevice);
+            bertyDevice.waitServiceCheck.release();
         }
 
         super.onServicesDiscovered(gatt, status);
@@ -134,13 +106,13 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-        Logger.put("debug", TAG, "onCharacteristicWrite() called with gatt: " + gatt + ", characteristic: " + characteristic + ", status: " + status);
+        Log.d(TAG, "onCharacteristicWrite() called with gatt: " + gatt + ", characteristic: " + characteristic + ", status: " + status);
 
         BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(gatt.getDevice().getAddress());
 
         if (bertyDevice != null) {
             if (status == GATT_SUCCESS) {
-                bertyDevice.waitWriteDoneRelease("onCharacteristicWrite()");
+                bertyDevice.waitWriteDone.release();
             } else {
                 String errorString;
 
@@ -176,7 +148,7 @@ public class GattClient extends BluetoothGattCallback {
                         errorString = "UNKNOWN_FAILURE";
                         break;
                 }
-                Logger.put("error", TAG, "GATT client writing failed: " + errorString);
+                Log.e(TAG, "GATT client writing failed: " + errorString);
             }
         }
 
@@ -196,7 +168,7 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
-        Logger.put("debug", TAG, "onMtuChanged() called with gatt: " + gatt + ", mtu: " + mtu + ", status: " + status);
+        Log.d(TAG, "onMtuChanged() called with gatt: " + gatt + ", mtu: " + mtu + ", status: " + status);
 
         BertyDevice bertyDevice = DeviceManager.getDeviceFromAddr(gatt.getDevice().getAddress());
 
@@ -217,7 +189,7 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-        Logger.put("verbose", TAG, "onCharacteristicRead() called with gatt: " + gatt + ", characteristic: " + characteristic + ", status: " + status);
+        Log.v(TAG, "onCharacteristicRead() called with gatt: " + gatt + ", characteristic: " + characteristic + ", status: " + status);
 
         super.onCharacteristicRead(gatt, characteristic, status);
     }
@@ -236,7 +208,7 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onPhyUpdate(BluetoothGatt gatt, int txPhy, int rxPhy, int status) {
-        Logger.put("verbose", TAG, "onPhyUpdate() called with gatt: " + gatt + ", txPhy: " + txPhy + ", rxPhy: " + rxPhy + ", status: " + status);
+        Log.v(TAG, "onPhyUpdate() called with gatt: " + gatt + ", txPhy: " + txPhy + ", rxPhy: " + rxPhy + ", status: " + status);
 
         super.onPhyUpdate(gatt, txPhy, rxPhy, status);
     }
@@ -254,7 +226,7 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onPhyRead(BluetoothGatt gatt, int txPhy, int rxPhy, int status) {
-        Logger.put("verbose", TAG, "onPhyRead() called with gatt: " + gatt + ", txPhy: " + txPhy + ", rxPhy: " + rxPhy + ", status: " + status);
+        Log.v(TAG, "onPhyRead() called with gatt: " + gatt + ", txPhy: " + txPhy + ", rxPhy: " + rxPhy + ", status: " + status);
 
         super.onPhyRead(gatt, txPhy, rxPhy, status);
     }
@@ -267,7 +239,7 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-        Logger.put("verbose", TAG, "onCharacteristicChanged() called with gatt: " + gatt + ", characteristic: " + characteristic);
+        Log.v(TAG, "onCharacteristicChanged() called with gatt: " + gatt + ", characteristic: " + characteristic);
 
         super.onCharacteristicChanged(gatt, characteristic);
     }
@@ -282,7 +254,7 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-        Logger.put("verbose", TAG, "onDescriptorRead() called with gatt: " + gatt + ", descriptor: " + descriptor + ", status: " + status);
+        Log.v(TAG, "onDescriptorRead() called with gatt: " + gatt + ", descriptor: " + descriptor + ", status: " + status);
 
         super.onDescriptorRead(gatt, descriptor, status);
     }
@@ -298,7 +270,7 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-        Logger.put("verbose", TAG, "onDescriptorWrite() called with gatt: " + gatt + ", descriptor: " + descriptor + ", status: " + status);
+        Log.v(TAG, "onDescriptorWrite() called with gatt: " + gatt + ", descriptor: " + descriptor + ", status: " + status);
 
         super.onDescriptorWrite(gatt, descriptor, status);
     }
@@ -311,7 +283,7 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
-        Logger.put("verbose", TAG, "onReliableWriteCompleted() called with gatt: " + gatt + ", status: " + status);
+        Log.v(TAG, "onReliableWriteCompleted() called with gatt: " + gatt + ", status: " + status);
 
         super.onReliableWriteCompleted(gatt, status);
     }
@@ -328,7 +300,7 @@ public class GattClient extends BluetoothGattCallback {
      */
     @Override
     public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
-        Logger.put("verbose", TAG, "onReadRemoteRssi() called with gatt: " + gatt + ", rssi: " + rssi + ", status: " + status);
+        Log.v(TAG, "onReadRemoteRssi() called with gatt: " + gatt + ", rssi: " + rssi + ", status: " + status);
 
         super.onReadRemoteRssi(gatt, rssi, status);
     }

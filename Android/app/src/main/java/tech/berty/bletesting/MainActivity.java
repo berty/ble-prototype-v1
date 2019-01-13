@@ -10,6 +10,7 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.graphics.Color;
 import android.view.View;
+import android.content.pm.PackageManager;
 
 public class MainActivity extends AppCompatActivity {
     private static String TAG = "main_activity";
@@ -124,6 +125,32 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         instance = null;
         super.onDestroy();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.e(TAG, "onActivityResult() called");
+        if (requestCode == BleManager.BLUETOOTH_ENABLE_REQUEST) {
+           if (requestCode == RESULT_OK) {
+               BleManager.bleTurnedOn = true;
+           }
+           BleManager.waitRequestResponse.release();
+        }
+
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        Log.e(TAG, "onRequestPermissionsResult() called");
+        if (requestCode == BleManager.LOCATION_PERMISSION_REQUEST) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                BleManager.permGranted = true;
+            }
+            BleManager.waitRequestResponse.release();
+        }
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     static MainActivity getInstance() {

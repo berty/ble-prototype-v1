@@ -40,7 +40,7 @@ public class Advertiser extends AdvertiseCallback {
      */
     @Override
     public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-        Logger.put("info", TAG, "Start advertising succeeded with settings: " + settingsInEffect);
+        Log.i(TAG, "Start advertising succeeded with settings: " + settingsInEffect);
         BleManager.setAdvertisingState(true);
 
         super.onStartSuccess(settingsInEffect);
@@ -77,7 +77,7 @@ public class Advertiser extends AdvertiseCallback {
             default: errorString = "UNKNOWN ADVERTISE FAILURE (" + errorCode + ")";
                 break;
         }
-        Logger.put("error", TAG, "Start advertising failed with error: " + errorString);
+        Log.e(TAG, "Start advertising failed with error: " + errorString);
         BleManager.setAdvertisingState(advertising);
 
         super.onStartFailure(errorCode);

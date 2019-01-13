@@ -68,7 +68,7 @@ public class ConnectActivity extends AppCompatActivity {
         if (bundle != null) {
             address = bundle.getString("address");
         } else {
-            Logger.put("error", TAG, "Can't get bundle from MainActivity");
+            Log.e(TAG, "Can't get bundle from MainActivity");
         }
 
         // Get reference / set text for interface elements
@@ -118,17 +118,7 @@ public class ConnectActivity extends AppCompatActivity {
                 if (bertyDevice.isIdentified()) {
                     bertyDevice.disconnectGatt();
                 } else {
-                    if (bertyDevice.lockConnAttemptTryAcquire("ConnectActivity", 0)) {
-                        if (bertyDevice.connectGatt()) {
-                            bertyDevice.lockConnAttemptRelease("ConnectActivity");
-                            if (bertyDevice.lockHandshakeAttemptTryAcquire("ConnectActivity", 0)) {
-                                bertyDevice.bertyHandshake();
-                                bertyDevice.lockHandshakeAttemptRelease("ConnectActivity");
-                            }
-                        } else {
-                            bertyDevice.lockConnAttemptRelease("ConnectActivity");
-                        }
-                    }
+                    bertyDevice.asyncConnectionToDevice();
                 }
                 toggleButtons();
             }
@@ -189,8 +179,8 @@ public class ConnectActivity extends AppCompatActivity {
                         int gattServerState = bertyDevice.getGattServerState();
 
                         if (prevGattClientState != gattClientState || prevGattServerState != gattServerState) {
-                            Logger.put("verbose", TAG, "GATT client connection state: " + Logger.connectionStateToString(gattClientState));
-                            Logger.put("verbose", TAG, "GATT server connection state: " + Logger.connectionStateToString(gattServerState));
+                            Log.v(TAG, "GATT client connection state: " + Helper.connectionStateToString(gattClientState));
+                            Log.v(TAG, "GATT server connection state: " + Helper.connectionStateToString(gattServerState));
 
                             prevGattClientState = gattClientState;
                             prevGattServerState = gattServerState;
@@ -209,7 +199,7 @@ public class ConnectActivity extends AppCompatActivity {
                         Thread.sleep(250);
                     }
                 } catch (Exception e) {
-                    Logger.put("error", TAG, "Failed in connectionWatcher: " + e.getMessage());
+                    Log.e(TAG, "Failed in connectionWatcher: " + e.getMessage());
                 }
             }
         });

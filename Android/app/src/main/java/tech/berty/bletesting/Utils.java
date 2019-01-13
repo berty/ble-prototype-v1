@@ -1,38 +1,34 @@
 package tech.berty.bletesting;
 
-import android.util.Log;
-
 import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTED;
 import static android.bluetooth.BluetoothProfile.STATE_CONNECTING;
 import static android.bluetooth.BluetoothProfile.STATE_CONNECTED;
 import static android.bluetooth.BluetoothProfile.STATE_DISCONNECTING;
 
-class Logger {
+class Log {
 
-    private Logger() {}
-
-    static void put(String level, String tag, String log) {
-        switch (level) {
-            case "verbose":
-                Log.v(tag, log);
-                break;
-            case "debug":
-                Log.d(tag, log);
-                break;
-            case "info":
-                Log.i(tag, log);
-                break;
-            case "warn":
-                Log.w(tag, log);
-                break;
-            case "error":
-                Log.e(tag, log);
-                break;
-            default:
-                Log.e(tag, log);
-                break;
-        }
+    static void v(String tag, String log) {
+        android.util.Log.v(tag, log);
     }
+
+    static void d(String tag, String log) {
+        android.util.Log.d(tag, log);
+    }
+
+    static void i(String tag, String log) {
+        android.util.Log.i(tag, log);
+    }
+
+    static void w(String tag, String log) {
+        android.util.Log.w(tag, log);
+    }
+
+    static void e(String tag, String log) {
+        android.util.Log.e(tag, log);
+    }
+}
+
+class Helper {
 
     static String connectionStateToString(int state) {
         switch (state) {

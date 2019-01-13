@@ -11,45 +11,40 @@ import java.util.Map;
 final class DeviceManager {
     private static final String TAG = "device_manager";
 
-    private static final int handshakeDoneTimeout = 120000;
-
     private static final HashMap<String, BertyDevice> bertyDevices = new HashMap<>();
 
     private DeviceManager() {}
 
 
-    // Index managing
+    // Index management
     static void addDeviceToIndex(BertyDevice bertyDevice) {
-        Logger.put("debug", TAG, "addDeviceToIndex() called with device: " + bertyDevice + ", current index size: " + bertyDevices.size() + ", new index size: " + (bertyDevices.size() + 1));
+        Log.d(TAG, "addDeviceToIndex() called with device: " + bertyDevice + ", current index size: " + bertyDevices.size() + ", new index size: " + (bertyDevices.size() + 1));
 
         synchronized (bertyDevices) {
             if (!bertyDevices.containsKey(bertyDevice.getAddr())) {
                 bertyDevices.put(bertyDevice.getAddr(), bertyDevice);
             } else {
-                Logger.put("error", TAG, "Berty device already in index: " + bertyDevice.getAddr());
+                Log.e(TAG, "addDeviceToIndex() device already in index: " + bertyDevice.getAddr());
             }
         }
     }
 
     static void removeDeviceFromIndex(BertyDevice bertyDevice) {
-        Logger.put("debug", TAG, "removeDeviceFromIndex() called with device: " + bertyDevice + ", current index size: " + bertyDevices.size() + ", new index size: " + (bertyDevices.size() - 1));
+        Log.d(TAG, "removeDeviceFromIndex() called with device: " + bertyDevice + ", current index size: " + bertyDevices.size() + ", new index size: " + (bertyDevices.size() - 1));
 
-        bertyDevice.lockConnAttemptTryAcquire("removeDeviceFromIndex()", 180000);
-        bertyDevice.disconnectGatt();
         synchronized (bertyDevices) {
             if (bertyDevices.containsKey(bertyDevice.getAddr())) {
                 bertyDevices.remove(bertyDevice.getAddr());
             } else {
-                Logger.put("error", TAG, "Berty device not found in index with address: " + bertyDevice.getAddr());
+                Log.e(TAG, "removeDeviceFromIndex() device not found in index: " + bertyDevice.getAddr());
             }
         }
-        bertyDevice.lockConnAttemptRelease("removeDeviceFromIndex()");
     }
 
 
     // Device getters
     static BertyDevice getDeviceFromAddr(String addr) {
-        Logger.put("debug", TAG, "getDeviceFromAddr() called with address: " + addr);
+        Log.d(TAG, "getDeviceFromAddr() called with address: " + addr);
 
         synchronized (bertyDevices) {
             if (bertyDevices.containsKey(addr)) {
@@ -57,13 +52,13 @@ final class DeviceManager {
             }
         }
 
-        Logger.put("warn", TAG, "Berty device not found with address: " + addr);
+        Log.w(TAG, "getDeviceFromAddr() device not found with address: " + addr);
 
         return null;
     }
 
     private static BertyDevice getDeviceFromMultiAddr(String multiAddr) {
-        Logger.put("debug", TAG, "getDeviceFromMultiAddr() called with MultiAddr: " + multiAddr);
+        Log.d(TAG, "getDeviceFromMultiAddr() called with MultiAddr: " + multiAddr);
 
         synchronized (bertyDevices) {
             BertyDevice bertyDevice;
@@ -76,40 +71,30 @@ final class DeviceManager {
             }
         }
 
-        Logger.put("error", TAG, "Berty device not found with MultiAddr: " + multiAddr);
+        Log.e(TAG, "getDeviceFromMultiAddr() device not found with MultiAddr: " + multiAddr);
 
         return null;
     }
 
 
-    // Write related
-    static boolean write(byte[] blob, String multiAddr) {
-        return write(blob, getDeviceFromMultiAddr(multiAddr));
+    // Write functions
+    static boolean write(byte[] payload, String multiAddr) {
+        return write(payload, getDeviceFromMultiAddr(multiAddr));
     }
 
-    private static boolean write(byte[] blob, BertyDevice bertyDevice) {
-        Logger.put("debug", TAG, "write() called with blob: " + new String(blob, Charset.forName("UTF-8")) + ", len: " + blob.length + ", device: " + bertyDevice);
+    private static boolean write(byte[] payload, BertyDevice bertyDevice) {
+        Log.d(TAG, "write() called with payload: " + new String(payload, Charset.forName("UTF-8")) + ", len: " + payload.length + ", device: " + bertyDevice);
 
         if (bertyDevice == null) {
-            Logger.put("error", TAG, "write() failed: unknown device");
+            // Could happen if device has disconnected and libp2p isn't aware of it
+            Log.e(TAG, "write() failed: unknown device");
+            return false;
+        } else if (!bertyDevice.isIdentified()) {
+            // Could happen if device has disconnected, libp2p isn't aware of it and device is reconnecting right now
+            Log.e(TAG, "write() failed: device not ready yet");
             return false;
         }
 
-        try {
-            if (bertyDevice.handshakeDoneTryAcquire("write() DeviceManager", handshakeDoneTimeout)) {
-                bertyDevice.handshakeDoneRelease("write() DeviceManager");
-                if (bertyDevice.isIdentified()) {
-                    return bertyDevice.writeOnCharacteristic(blob, bertyDevice.writerCharacteristic);
-                } else {
-                    Logger.put("error", TAG, "write() failed: handshake failed");
-                }
-            } else {
-                Logger.put("error", TAG, "write() timeouted: handshake still not done");
-            }
-        } catch (Exception e) {
-            Logger.put("error", TAG, "write() failed: " + e.getMessage());
-        }
-
-        return false;
+        return bertyDevice.writeOnCharacteristic(payload, bertyDevice.writerCharacteristic);
     }
 }

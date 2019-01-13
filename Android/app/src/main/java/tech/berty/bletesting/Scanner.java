@@ -41,7 +41,7 @@ public class Scanner extends ScanCallback {
      */
     @Override
     public void onScanResult(int callbackType, ScanResult result) {
-        Logger.put("verbose", TAG, "onScanResult() called with callbackType: " + callbackType + ", result: " + result);
+        Log.v(TAG, "onScanResult() called with callbackType: " + callbackType + ", result: " + result);
 
         parseResult(result);
         super.onScanResult(callbackType, result);
@@ -54,7 +54,7 @@ public class Scanner extends ScanCallback {
      */
     @Override
     public void onBatchScanResults(List<ScanResult> results) {
-        Logger.put("verbose", TAG, "onBatchScanResult() called with results: " + results);
+        Log.v(TAG, "onBatchScanResult() called with results: " + results);
 
         for (ScanResult result:results) {
             parseResult(result);
@@ -89,17 +89,17 @@ public class Scanner extends ScanCallback {
             default: errorString = "UNKNOWN SCAN FAILURE (" + errorCode + ")";
                 break;
         }
-        Logger.put("error", TAG, "Start scanning failed with error: " + errorString);
+        Log.e(TAG, "Start scanning failed with error: " + errorString);
         BleManager.setScanningState(scanning);
 
         super.onScanFailed(errorCode);
     }
 
     private static void parseResult(ScanResult result) {
-        Logger.put("verbose", TAG, "parseResult() called with device: " + result.getDevice());
+        Log.v(TAG, "parseResult() called with device: " + result.getDevice());
 
         if (!BleManager.isScanning()) {
-            Logger.put("info", TAG, "Start scanning succeeded");
+            Log.i(TAG, "Start scanning succeeded");
             BleManager.setScanningState(true);
         }
 
