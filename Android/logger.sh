@@ -14,7 +14,15 @@ TAGS=(
 
 PACKAGE='tech.berty.bletesting'
 
-DEVICES=($(adb devices | grep '\tdevice' | cut -d'	' -f1))
+SERIALS=($(adb devices | grep '\tdevice' | cut -d'	' -f1))
+
+DEVICES=()
+for SERIAL in "${SERIALS[@]}"; do
+    BRAND=($(adb -s $SERIAL shell getprop ro.product.brand))
+    MODEL=($(adb -s $SERIAL shell getprop ro.product.model))
+    DEVICES+=("$BRAND $MODEL")
+done
+
 CHOICE=""
 
 if [ ${#DEVICES[@]} -eq 0 ]; then
@@ -42,7 +50,7 @@ else
 		if [[ !($INPUT =~ $REGEX) || $INPUT -eq 0 || $INPUT -gt ${#DEVICES[@]} ]] ; then
 		   echo "Error: wrong choice!"
 		else
-			CHOICE=${DEVICES[((INPUT - 1))]}
+			CHOICE=${SERIALS[((INPUT - 1))]}
 			break
 		fi
 	done
